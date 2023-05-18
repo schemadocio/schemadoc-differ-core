@@ -101,7 +101,8 @@ pub struct Components {
     pub examples: Option<IndexMap<String, MayBeRef303<Example>>>,
     pub request_bodies: Option<IndexMap<String, MayBeRef303<RequestBody>>>,
     pub headers: Option<IndexMap<String, MayBeRef303<Header>>>,
-    pub security_schemes: Option<IndexMap<String, MayBeRef303<SecurityScheme>>>,
+    pub security_schemes:
+        Option<IndexMap<String, MayBeRef303<SecurityScheme>>>,
     pub links: Option<IndexMap<String, MayBeRef303<Link>>>,
     // pub callbacks: Option<HashMap<String, MayBeRef303<Header>>>,
 }
@@ -530,7 +531,8 @@ mod tests {
         "#;
 
         let source_de = &mut serde_json::Deserializer::from_str(op_def);
-        let result: Result<Response, _> = serde_path_to_error::deserialize(source_de);
+        let result: Result<Response, _> =
+            serde_path_to_error::deserialize(source_de);
         let _ = result.map_err(|err| {
             let path = err.path().to_string();
             dbg!(path, err)

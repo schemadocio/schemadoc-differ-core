@@ -14,10 +14,15 @@ pub mod stats;
 pub mod visitor;
 pub mod visitors;
 
+use crate::context::HttpSchemaDiffContext;
+use crate::core::{Diff, DiffResult};
 use once_cell::sync::Lazy;
+use std::rc::Rc;
 use tracing::info;
 
 use crate::error::Error;
+use crate::schema::HttpSchema;
+use crate::schema_diff::HttpSchemaDiff;
 use crate::schemas::openapi303::schema::OpenApi303;
 use crate::schemas::openapi310::schema::OpenApi310;
 use crate::schemas::swagger2::schema::SwaggerV2;
@@ -59,32 +64,36 @@ pub fn try_deserialize_schema(
     src_content: &str,
     tgt_content: &str,
 ) -> Result<(schema::HttpSchema, schema::HttpSchema), Error> {
-    let source: schema::HttpSchema =
-        if let Ok(schema) = serde_json::from_str::<OpenApi310>(src_content) {
-            Ok(schema.into())
-        } else if let Ok(schema) = serde_json::from_str::<OpenApi303>(src_content) {
-            Ok(schema.into())
-        } else if let Ok(schema) = serde_json::from_str::<SwaggerV2>(src_content) {
-            Ok(schema.into())
-        } else {
-            Err(Error::InvalidSourceSchema)
-        }?;
+    let source: schema::HttpSchema = if let Ok(schema) =
+        serde_json::from_str::<OpenApi310>(src_content)
+    {
+        Ok(schema.into())
+    } else if let Ok(schema) = serde_json::from_str::<OpenApi303>(src_content)
+    {
+        Ok(schema.into())
+    } else if let Ok(schema) = serde_json::from_str::<SwaggerV2>(src_content) {
+        Ok(schema.into())
+    } else {
+        Err(Error::InvalidSourceSchema)
+    }?;
 
     info!(
         src.schema.version = &source.version,
         src.schema.decoder = &source.schema_source
     );
 
-    let target: schema::HttpSchema =
-        if let Ok(schema) = serde_json::from_str::<OpenApi310>(tgt_content) {
-            Ok(schema.into())
-        } else if let Ok(schema) = serde_json::from_str::<OpenApi303>(tgt_content) {
-            Ok(schema.into())
-        } else if let Ok(schema) = serde_json::from_str::<SwaggerV2>(tgt_content) {
-            Ok(schema.into())
-        } else {
-            Err(Error::InvalidTargetSchema)
-        }?;
+    let target: schema::HttpSchema = if let Ok(schema) =
+        serde_json::from_str::<OpenApi310>(tgt_content)
+    {
+        Ok(schema.into())
+    } else if let Ok(schema) = serde_json::from_str::<OpenApi303>(tgt_content)
+    {
+        Ok(schema.into())
+    } else if let Ok(schema) = serde_json::from_str::<SwaggerV2>(tgt_content) {
+        Ok(schema.into())
+    } else {
+        Err(Error::InvalidTargetSchema)
+    }?;
 
     info!(
         tgt.schema.version = &target.version,
@@ -92,4 +101,15 @@ pub fn try_deserialize_schema(
     );
 
     Ok((source, target))
+}
+
+pub fn get_schema_diff(
+    src_schema: HttpSchema,
+    tgt_schema: HttpSchema,
+) -> DiffResult<HttpSchemaDiff> {
+    let src = Rc::new(src_schema);
+    let tgt = Rc::new(tgt_schema);
+
+    let context = HttpSchemaDiffContext::new(Rc::clone(&src), Rc::clone(&tgt));
+    src.diff(Some(&*tgt), &context)
 }

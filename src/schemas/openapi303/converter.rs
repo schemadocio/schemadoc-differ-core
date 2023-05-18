@@ -27,44 +27,55 @@ impl From<OpenApi303> for core::HttpSchema {
             let schemas = components.schemas.map(|schemas| {
                 schemas
                     .into_iter()
-                    .map(|(key, schema_ref)| (key, convert_schema_ref(schema_ref)))
+                    .map(|(key, schema_ref)| {
+                        (key, convert_schema_ref(schema_ref))
+                    })
                     .collect()
             });
 
             let responses = components.responses.map(|responses| {
                 responses
                     .into_iter()
-                    .map(|(key, response_ref)| (key, convert_response_ref(response_ref)))
+                    .map(|(key, response_ref)| {
+                        (key, convert_response_ref(response_ref))
+                    })
                     .collect()
             });
 
             let parameters = components.parameters.map(|parameters| {
                 parameters
                     .into_iter()
-                    .map(|(key, parameter_ref)| (key, convert_parameter_ref(parameter_ref)))
+                    .map(|(key, parameter_ref)| {
+                        (key, convert_parameter_ref(parameter_ref))
+                    })
                     .collect()
             });
 
             let examples = components.examples.map(|examples| {
                 examples
                     .into_iter()
-                    .map(|(key, example_ref)| (key, convert_example_ref(example_ref)))
-                    .collect()
-            });
-
-            let request_bodies = components.request_bodies.map(|request_bodies| {
-                request_bodies
-                    .into_iter()
-                    .map(|(key, request_body_ref)| {
-                        (key, convert_request_body_ref(request_body_ref))
+                    .map(|(key, example_ref)| {
+                        (key, convert_example_ref(example_ref))
                     })
                     .collect()
             });
 
+            let request_bodies =
+                components.request_bodies.map(|request_bodies| {
+                    request_bodies
+                        .into_iter()
+                        .map(|(key, request_body_ref)| {
+                            (key, convert_request_body_ref(request_body_ref))
+                        })
+                        .collect()
+                });
+
             let headers = components.headers.map(|headers| {
                 headers
                     .into_iter()
-                    .map(|(key, header_ref)| (key, convert_header_ref(header_ref)))
+                    .map(|(key, header_ref)| {
+                        (key, convert_header_ref(header_ref))
+                    })
                     .collect()
             });
 
@@ -75,14 +86,20 @@ impl From<OpenApi303> for core::HttpSchema {
                     .collect()
             });
 
-            let security_schemes = components.security_schemes.map(|security_schemes| {
-                security_schemes
-                    .into_iter()
-                    .map(|(key, security_scheme_ref)| {
-                        (key, convert_security_scheme_ref(security_scheme_ref))
-                    })
-                    .collect()
-            });
+            let security_schemes =
+                components.security_schemes.map(|security_schemes| {
+                    security_schemes
+                        .into_iter()
+                        .map(|(key, security_scheme_ref)| {
+                            (
+                                key,
+                                convert_security_scheme_ref(
+                                    security_scheme_ref,
+                                ),
+                            )
+                        })
+                        .collect()
+                });
 
             Some(core::Components {
                 schemas,
@@ -145,7 +162,9 @@ fn convert_path_ref(
         MayBeRef303::Ref(value) => core::MayBeRef::Ref(core::HttpSchemaRef {
             reference: value.reference,
         }),
-        MayBeRef303::Value(value) => core::MayBeRef::Value(convert_path(value, context)),
+        MayBeRef303::Value(value) => {
+            core::MayBeRef::Value(convert_path(value, context))
+        }
     }
 }
 
@@ -209,14 +228,18 @@ fn merge_parameters(
     for may_be_parameter in parameters {
         let key = match &may_be_parameter {
             MayBeRef303::Ref(value) => {
-                if let Some(parameter) = deref_parameter(context.components, value.reference()) {
+                if let Some(parameter) =
+                    deref_parameter(context.components, value.reference())
+                {
                     (parameter.name.clone(), parameter.r#in.clone())
                 } else {
                     // TODO: handle the case where ref not found
                     continue;
                 }
             }
-            MayBeRef303::Value(value) => (value.name.clone(), value.r#in.clone()),
+            MayBeRef303::Value(value) => {
+                (value.name.clone(), value.r#in.clone())
+            }
         };
 
         if visited.contains(&key) {
@@ -252,7 +275,9 @@ fn convert_operation(
     let responses = operation.responses.map(|responses| {
         responses
             .into_iter()
-            .map(|(code, response_ref)| (code, convert_response_ref(response_ref)))
+            .map(|(code, response_ref)| {
+                (code, convert_response_ref(response_ref))
+            })
             .collect()
     });
 
@@ -284,7 +309,9 @@ fn convert_request_body_ref(
         MayBeRef303::Ref(value) => core::MayBeRef::Ref(core::HttpSchemaRef {
             reference: value.reference,
         }),
-        MayBeRef303::Value(value) => core::MayBeRef::Value(convert_request_body(value)),
+        MayBeRef303::Value(value) => {
+            core::MayBeRef::Value(convert_request_body(value))
+        }
     }
 }
 
@@ -301,7 +328,9 @@ fn convert_media_types(
 ) -> IndexMap<String, core::MediaType> {
     media_types
         .into_iter()
-        .map(|(content_type, media_type)| (content_type, convert_media_type(media_type)))
+        .map(|(content_type, media_type)| {
+            (content_type, convert_media_type(media_type))
+        })
         .collect()
 }
 
@@ -339,7 +368,9 @@ fn convert_media_type(media_type: MediaType) -> core::MediaType {
     }
 }
 
-fn convert_encodings(encodings: IndexMap<String, Encoding>) -> IndexMap<String, core::Encoding> {
+fn convert_encodings(
+    encodings: IndexMap<String, Encoding>,
+) -> IndexMap<String, core::Encoding> {
     encodings
         .into_iter()
         .map(|(key, encoding)| (key, convert_encoding(encoding)))
@@ -356,12 +387,16 @@ fn convert_encoding(encoding: Encoding) -> core::Encoding {
     }
 }
 
-fn convert_response_ref(response_ref: MayBeRef303<Response>) -> core::MayBeRef<core::Response> {
+fn convert_response_ref(
+    response_ref: MayBeRef303<Response>,
+) -> core::MayBeRef<core::Response> {
     match response_ref {
         MayBeRef303::Ref(value) => core::MayBeRef::Ref(core::HttpSchemaRef {
             reference: value.reference,
         }),
-        MayBeRef303::Value(response) => core::MayBeRef::Value(convert_response(response)),
+        MayBeRef303::Value(response) => {
+            core::MayBeRef::Value(convert_response(response))
+        }
     }
 }
 
@@ -390,12 +425,16 @@ fn convert_headers(
         .collect()
 }
 
-fn convert_header_ref(header_ref: MayBeRef303<Header>) -> core::MayBeRef<core::Header> {
+fn convert_header_ref(
+    header_ref: MayBeRef303<Header>,
+) -> core::MayBeRef<core::Header> {
     match header_ref {
         MayBeRef303::Ref(value) => core::MayBeRef::Ref(core::HttpSchemaRef {
             reference: value.reference,
         }),
-        MayBeRef303::Value(value) => core::MayBeRef::Value(convert_header(value)),
+        MayBeRef303::Value(value) => {
+            core::MayBeRef::Value(convert_header(value))
+        }
     }
 }
 
@@ -415,12 +454,16 @@ fn convert_header(header: Header) -> core::Header {
     }
 }
 
-fn convert_parameter_ref(parameter_ref: MayBeRef303<Parameter>) -> core::MayBeRef<core::Parameter> {
+fn convert_parameter_ref(
+    parameter_ref: MayBeRef303<Parameter>,
+) -> core::MayBeRef<core::Parameter> {
     match parameter_ref {
         MayBeRef303::Ref(value) => core::MayBeRef::Ref(core::HttpSchemaRef {
             reference: value.reference,
         }),
-        MayBeRef303::Value(parameter) => core::MayBeRef::Value(convert_parameter(parameter)),
+        MayBeRef303::Value(parameter) => {
+            core::MayBeRef::Value(convert_parameter(parameter))
+        }
     }
 }
 
@@ -443,12 +486,16 @@ fn convert_parameter(parameter: Parameter) -> core::Parameter {
     }
 }
 
-fn convert_schema_ref(schema_ref: MayBeRef303<Schema>) -> core::MayBeRef<core::Schema> {
+fn convert_schema_ref(
+    schema_ref: MayBeRef303<Schema>,
+) -> core::MayBeRef<core::Schema> {
     match schema_ref {
         MayBeRef303::Ref(value) => core::MayBeRef::Ref(core::HttpSchemaRef {
             reference: value.reference,
         }),
-        MayBeRef303::Value(value) => core::MayBeRef::Value(convert_schema(value)),
+        MayBeRef303::Value(value) => {
+            core::MayBeRef::Value(convert_schema(value))
+        }
     }
 }
 
@@ -458,7 +505,10 @@ fn convert_schema(schema: Schema) -> core::Schema {
             match type_ {
                 Either::Left(single) => {
                     if nullable {
-                        Some(Either::Right(Box::new(vec![single, "null".to_string()])))
+                        Some(Either::Right(Box::new(vec![
+                            single,
+                            "null".to_string(),
+                        ])))
                     } else {
                         Some(Either::Left(single))
                     }
@@ -509,21 +559,22 @@ fn convert_schema(schema: Schema) -> core::Schema {
     });
 
     let additional_properties =
-        schema
-            .additional_properties
-            .map(|additional_properties| match additional_properties {
+        schema.additional_properties.map(|additional_properties| {
+            match additional_properties {
                 Either::Left(value) => Either::Left(value),
                 Either::Right(schema_ref) => {
                     Either::Right(Box::new(convert_schema_ref(*schema_ref)))
                 }
-            });
-
-    let discriminator = schema
-        .discriminator
-        .map(|discriminator| core::Discriminator {
-            property_name: discriminator.property_name,
-            mapping: discriminator.mapping,
+            }
         });
+
+    let discriminator =
+        schema
+            .discriminator
+            .map(|discriminator| core::Discriminator {
+                property_name: discriminator.property_name,
+                mapping: discriminator.mapping,
+            });
 
     let xml = schema.xml.map(convert_xml);
 
@@ -585,12 +636,16 @@ fn convert_xml(external_docs: Xml) -> core::Xml {
     }
 }
 
-fn convert_link_ref(link_ref: MayBeRef303<Link>) -> core::MayBeRef<core::Link> {
+fn convert_link_ref(
+    link_ref: MayBeRef303<Link>,
+) -> core::MayBeRef<core::Link> {
     match link_ref {
         MayBeRef303::Ref(value) => core::MayBeRef::Ref(core::HttpSchemaRef {
             reference: value.reference,
         }),
-        MayBeRef303::Value(value) => core::MayBeRef::Value(convert_link(value)),
+        MayBeRef303::Value(value) => {
+            core::MayBeRef::Value(convert_link(value))
+        }
     }
 }
 
@@ -621,9 +676,11 @@ fn convert_example_values(
         .into_iter()
         .map(|(key, example)| {
             let example_ref = match example {
-                MayBeRef303::Ref(value) => core::MayBeRef::Ref(core::HttpSchemaRef {
-                    reference: value.reference,
-                }),
+                MayBeRef303::Ref(value) => {
+                    core::MayBeRef::Ref(core::HttpSchemaRef {
+                        reference: value.reference,
+                    })
+                }
                 MayBeRef303::Value(value) => core::MayBeRef::Value(value),
             };
             (key, example_ref)
@@ -631,12 +688,16 @@ fn convert_example_values(
         .collect()
 }
 
-fn convert_example_ref(example_ref: MayBeRef303<Example>) -> core::MayBeRef<core::Example> {
+fn convert_example_ref(
+    example_ref: MayBeRef303<Example>,
+) -> core::MayBeRef<core::Example> {
     match example_ref {
         MayBeRef303::Ref(value) => core::MayBeRef::Ref(core::HttpSchemaRef {
             reference: value.reference,
         }),
-        MayBeRef303::Value(value) => core::MayBeRef::Value(convert_example(value)),
+        MayBeRef303::Value(value) => {
+            core::MayBeRef::Value(convert_example(value))
+        }
     }
 }
 
@@ -656,11 +717,15 @@ fn convert_security_scheme_ref(
         MayBeRef303::Ref(value) => core::MayBeRef::Ref(core::HttpSchemaRef {
             reference: value.reference,
         }),
-        MayBeRef303::Value(value) => core::MayBeRef::Value(convert_security_scheme(value)),
+        MayBeRef303::Value(value) => {
+            core::MayBeRef::Value(convert_security_scheme(value))
+        }
     }
 }
 
-fn convert_security_scheme(security_scheme: SecurityScheme) -> core::SecurityScheme {
+fn convert_security_scheme(
+    security_scheme: SecurityScheme,
+) -> core::SecurityScheme {
     core::SecurityScheme {
         r#type: security_scheme.r#type,
         description: security_scheme.description,
@@ -677,8 +742,12 @@ fn convert_oauth_flows(oauth_flows: OAuthFlows) -> core::OAuthFlows {
     core::OAuthFlows {
         implicit: oauth_flows.implicit.map(convert_oauth_flow),
         password: oauth_flows.password.map(convert_oauth_flow),
-        client_credentials: oauth_flows.client_credentials.map(convert_oauth_flow),
-        authorization_code: oauth_flows.authorization_code.map(convert_oauth_flow),
+        client_credentials: oauth_flows
+            .client_credentials
+            .map(convert_oauth_flow),
+        authorization_code: oauth_flows
+            .authorization_code
+            .map(convert_oauth_flow),
     }
 }
 
@@ -732,13 +801,17 @@ fn convert_server(server: Server) -> core::Server {
         variables: server.variables.map(|variables| {
             variables
                 .into_iter()
-                .map(|(key, variable)| (key, convert_server_variable(variable)))
+                .map(|(key, variable)| {
+                    (key, convert_server_variable(variable))
+                })
                 .collect()
         }),
     }
 }
 
-fn convert_server_variable(server_variable: ServerVariable) -> core::ServerVariable {
+fn convert_server_variable(
+    server_variable: ServerVariable,
+) -> core::ServerVariable {
     core::ServerVariable {
         r#enum: server_variable.r#enum,
         default: server_variable.default,

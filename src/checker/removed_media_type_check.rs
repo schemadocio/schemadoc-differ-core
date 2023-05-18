@@ -47,7 +47,11 @@ impl<'s> DiffVisitor<'s> for RemovedMediaTypeCheck {
         true
     }
 
-    fn visit_media_type(&self, pointer: &PathPointer, _: &'s DiffResult<MediaTypeDiff>) -> bool {
+    fn visit_media_type(
+        &self,
+        pointer: &PathPointer,
+        _: &'s DiffResult<MediaTypeDiff>,
+    ) -> bool {
         if pointer.is_removed() {
             self.pointers.borrow_mut().push(pointer.clone());
             return false;
@@ -67,7 +71,7 @@ impl Default for RemovedMediaTypeCheck {
 
 impl<'s> ValidationIssuer<'s> for RemovedMediaTypeCheck {
     fn id(&self) -> &'static str {
-        "removed-media-type-check"
+        "removed-media-type"
     }
 
     fn visitor(&self) -> &dyn DiffVisitor<'s> {
@@ -83,5 +87,46 @@ impl<'s> ValidationIssuer<'s> for RemovedMediaTypeCheck {
             .collect::<Vec<ValidationIssue>>();
 
         Some(issues)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::checker::removed_media_type_check::RemovedMediaTypeCheck;
+    use crate::checker::ValidationIssuer;
+    use crate::get_schema_diff;
+    use crate::schema::HttpSchema;
+    use crate::schemas::openapi303::schema::OpenApi303;
+
+    #[test]
+    fn test_removed_media_type_check() {
+        let src_schema: HttpSchema =
+            serde_json::from_str::<OpenApi303>(include_str!(
+            "../../data/checks/removed-media-type/schema-with-media-types.json"
+        ))
+            .unwrap()
+            .into();
+
+        let tgt_schema: HttpSchema = serde_json::from_str::<OpenApi303>(include_str!(
+            "../../data/checks/removed-media-type/schema-with-media-types-altered.json"
+        ))
+        .unwrap()
+        .into();
+
+        let diff = get_schema_diff(src_schema, tgt_schema);
+
+        let checker = RemovedMediaTypeCheck::default();
+        crate::visitor::dispatch_visitor(diff.get().unwrap(), &checker);
+        let issues = checker.issues().unwrap();
+
+        assert_eq!(issues.len(), 2);
+        assert_eq!(
+            issues.get(0).unwrap().path.get_path(),
+            "paths//test/put/requestBody/content/text/plain",
+        );
+        assert_eq!(
+            issues.get(1).unwrap().path.get_path(),
+            "paths//test/put/responses/200/content/text/plain",
+        );
     }
 }

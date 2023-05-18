@@ -2,8 +2,10 @@ use std::cell::RefCell;
 
 use crate::checker::{ValidationIssue, ValidationIssuer};
 use crate::core::{DiffResult, MapDiff};
-use crate::path_pointer::PathPointer;
-use crate::schema_diff::{MayBeRefDiff, MediaTypeDiff, OperationDiff, ResponseDiff, SchemaDiff};
+use crate::path_pointer::{PathPointer, PointerAncestor};
+use crate::schema_diff::{
+    MayBeRefDiff, MediaTypeDiff, OperationDiff, ResponseDiff, SchemaDiff,
+};
 use crate::visitor::DiffVisitor;
 
 pub struct RemovedResponsePropertyCheck {
@@ -17,7 +19,7 @@ impl<'s> DiffVisitor<'s> for RemovedResponsePropertyCheck {
         _: &str,
         _: &'s DiffResult<OperationDiff>,
     ) -> bool {
-        !pointer.is_removed()
+        pointer.is_updated()
     }
 
     fn visit_responses(
@@ -25,7 +27,7 @@ impl<'s> DiffVisitor<'s> for RemovedResponsePropertyCheck {
         pointer: &PathPointer,
         _: &'s DiffResult<MapDiff<MayBeRefDiff<ResponseDiff>>>,
     ) -> bool {
-        !pointer.is_removed()
+        pointer.is_updated()
     }
 
     fn visit_media_types(
@@ -33,27 +35,35 @@ impl<'s> DiffVisitor<'s> for RemovedResponsePropertyCheck {
         pointer: &PathPointer,
         _: &'s DiffResult<MapDiff<MediaTypeDiff>>,
     ) -> bool {
-        !pointer.is_removed()
+        pointer.is_updated()
     }
 
-    fn visit_media_type(&self, pointer: &PathPointer, _: &'s DiffResult<MediaTypeDiff>) -> bool {
-        !pointer.is_removed()
+    fn visit_media_type(
+        &self,
+        pointer: &PathPointer,
+        _: &'s DiffResult<MediaTypeDiff>,
+    ) -> bool {
+        pointer.is_updated()
     }
 
     fn visit_schema(
         &self,
         pointer: &PathPointer,
-        schema_diff_result: &'s DiffResult<SchemaDiff>,
+        _: &'s DiffResult<SchemaDiff>,
     ) -> bool {
-        if pointer.parent().is_removed() {
+        if pointer.ancestor(PointerAncestor::schema()).is_removed() {
             return false;
         }
 
-        if let DiffResult::Removed(_) = schema_diff_result {
-            self.pointers.borrow_mut().push(pointer.clone())
+        if pointer
+            .ancestor(PointerAncestor::schema_property())
+            .is_removed()
+        {
+            self.pointers.borrow_mut().push(pointer.clone());
+            return false;
         }
 
-        true
+        pointer.is_updated()
     }
 }
 
@@ -67,7 +77,7 @@ impl Default for RemovedResponsePropertyCheck {
 
 impl<'s> ValidationIssuer<'s> for RemovedResponsePropertyCheck {
     fn id(&self) -> &'static str {
-        "remove-response-property"
+        "removed-response-property"
     }
 
     fn visitor(&self) -> &dyn DiffVisitor<'s> {
@@ -83,5 +93,52 @@ impl<'s> ValidationIssuer<'s> for RemovedResponsePropertyCheck {
             .collect::<Vec<ValidationIssue>>();
 
         Some(issues)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::checker::removed_response_property_check::RemovedResponsePropertyCheck;
+    use crate::checker::ValidationIssuer;
+    use crate::get_schema_diff;
+    use crate::schema::HttpSchema;
+    use crate::schemas::openapi303::schema::OpenApi303;
+
+    #[test]
+    fn test_removed_response_property_check() {
+        let src_schema: HttpSchema = serde_json::from_str::<OpenApi303>(include_str!(
+            "../../data/checks/removed-response-property/schema-with-responses.json"
+        ))
+        .unwrap()
+        .into();
+
+        let tgt_schema: HttpSchema = serde_json::from_str::<OpenApi303>(include_str!(
+            "../../data/checks/removed-response-property/schema-with-responses-altered.json"
+        ))
+        .unwrap()
+        .into();
+
+        let diff = get_schema_diff(src_schema, tgt_schema);
+
+        let checker = RemovedResponsePropertyCheck::default();
+        crate::visitor::dispatch_visitor(diff.get().unwrap(), &checker);
+        let issues = checker.issues().unwrap();
+
+        assert_eq!(issues.len(), 3);
+        // replaced with `shortname` property
+        assert_eq!(
+            issues.get(0).unwrap().path.get_path(),
+            "paths//test/post/responses/200/content/application/json/schema/properties/description",
+        );
+        //removed
+        assert_eq!(
+            issues.get(1).unwrap().path.get_path(),
+            "paths//test/post/responses/200/content/application/json/schema/properties/settings/properties/s2",
+        );
+        // parent schema type changed from "object" to "string"
+        assert_eq!(
+            issues.get(2).unwrap().path.get_path(),
+            "paths//test/put/responses/200/content/application/json/schema/properties/id",
+        );
     }
 }

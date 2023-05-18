@@ -1,9 +1,12 @@
 use crate::schemas::openapi303::schema::{
-    Components, Example, Header, Link, MayBeRef303, OpenApi303, Parameter, RequestBody, Response,
-    Schema, SecurityScheme,
+    Components, Example, Header, Link, MayBeRef303, OpenApi303, Parameter,
+    RequestBody, Response, Schema, SecurityScheme,
 };
 
-pub fn deref_schema<'a>(components: &'a Option<Components>, reference: &str) -> Option<&'a Schema> {
+pub fn deref_schema<'a>(
+    components: &'a Option<Components>,
+    reference: &str,
+) -> Option<&'a Schema> {
     components.as_ref().and_then(|components| {
         components.schemas.as_ref().and_then(|map| {
             map.get(&reference.replace("#/components/schemas/", ""))
@@ -30,7 +33,10 @@ pub fn deref_parameter<'a>(
     })
 }
 
-pub fn deref_example<'a>(swagger: &'a OpenApi303, reference: &str) -> Option<&'a Example> {
+pub fn deref_example<'a>(
+    swagger: &'a OpenApi303,
+    reference: &str,
+) -> Option<&'a Example> {
     swagger.components.as_ref().and_then(|components| {
         components.examples.as_ref().and_then(|map| {
             map.get(&reference.replace("#/components/examples/", ""))
@@ -42,7 +48,10 @@ pub fn deref_example<'a>(swagger: &'a OpenApi303, reference: &str) -> Option<&'a
     })
 }
 
-pub fn deref_request_body<'a>(swagger: &'a OpenApi303, reference: &str) -> Option<&'a RequestBody> {
+pub fn deref_request_body<'a>(
+    swagger: &'a OpenApi303,
+    reference: &str,
+) -> Option<&'a RequestBody> {
     swagger.components.as_ref().and_then(|components| {
         components.request_bodies.as_ref().and_then(|map| {
             map.get(&reference.replace("#/components/requestBodies/", ""))
@@ -54,7 +63,10 @@ pub fn deref_request_body<'a>(swagger: &'a OpenApi303, reference: &str) -> Optio
     })
 }
 
-pub fn deref_header<'a>(swagger: &'a OpenApi303, reference: &str) -> Option<&'a Header> {
+pub fn deref_header<'a>(
+    swagger: &'a OpenApi303,
+    reference: &str,
+) -> Option<&'a Header> {
     swagger.components.as_ref().and_then(|components| {
         components.headers.as_ref().and_then(|map| {
             map.get(&reference.replace("#/components/headers/", ""))
@@ -81,19 +93,26 @@ pub fn deref_security_scheme<'a>(
     })
 }
 
-pub fn deref_link<'a>(swagger: &'a OpenApi303, reference: &str) -> Option<&'a Link> {
+pub fn deref_link<'a>(
+    swagger: &'a OpenApi303,
+    reference: &str,
+) -> Option<&'a Link> {
     swagger.components.as_ref().and_then(|components| {
         components.links.as_ref().and_then(|map| {
-            map.get(&reference.replace("#/components/links/", ""))
-                .map(|may_be_link| match may_be_link {
+            map.get(&reference.replace("#/components/links/", "")).map(
+                |may_be_link| match may_be_link {
                     MayBeRef303::Value(value) => value,
                     _ => unimplemented!(),
-                })
+                },
+            )
         })
     })
 }
 
-pub fn deref_response<'a>(swagger: &'a OpenApi303, reference: &str) -> Option<&'a Response> {
+pub fn deref_response<'a>(
+    swagger: &'a OpenApi303,
+    reference: &str,
+) -> Option<&'a Response> {
     swagger.components.as_ref().and_then(|components| {
         components.responses.as_ref().and_then(|map| {
             map.get(&reference.replace("#/components/responses/", ""))

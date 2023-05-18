@@ -5,14 +5,16 @@ use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::core::{ComponentContainer, DiffContainer, DiffContext, DiffResult, MayBeRefCore};
+use crate::core::{
+    ComponentContainer, DiffContainer, DiffContext, DiffResult, MayBeRefCore,
+};
 use crate::schema::{
-    Components, Example, Header, HttpSchema, Link, Parameter, Path, RequestBody, Response, Schema,
-    SecurityScheme,
+    Components, Example, Header, HttpSchema, Link, Parameter, Path,
+    RequestBody, Response, Schema, SecurityScheme,
 };
 use crate::schema_diff::{
-    ExampleDiff, HeaderDiff, LinkDiff, ParameterDiff, PathDiff, RequestBodyDiff, ResponseDiff,
-    SchemaDiff, SecuritySchemeDiff,
+    ExampleDiff, HeaderDiff, LinkDiff, ParameterDiff, PathDiff,
+    RequestBodyDiff, ResponseDiff, SchemaDiff, SecuritySchemeDiff,
 };
 
 #[derive(Clone)]
@@ -26,16 +28,23 @@ pub struct HttpSchemaDiffContext {
     source_visited_references: Rc<BTreeMap<String, usize>>,
     target_visited_references: Rc<BTreeMap<String, usize>>,
 
-    schema_diff_cache: Rc<RefCell<HashMap<String, Arc<DiffResult<SchemaDiff>>>>>,
-    header_diff_cache: Rc<RefCell<HashMap<String, Arc<DiffResult<HeaderDiff>>>>>,
-    response_diff_cache: Rc<RefCell<HashMap<String, Arc<DiffResult<ResponseDiff>>>>>,
-    parameter_diff_cache: Rc<RefCell<HashMap<String, Arc<DiffResult<ParameterDiff>>>>>,
+    schema_diff_cache:
+        Rc<RefCell<HashMap<String, Arc<DiffResult<SchemaDiff>>>>>,
+    header_diff_cache:
+        Rc<RefCell<HashMap<String, Arc<DiffResult<HeaderDiff>>>>>,
+    response_diff_cache:
+        Rc<RefCell<HashMap<String, Arc<DiffResult<ResponseDiff>>>>>,
+    parameter_diff_cache:
+        Rc<RefCell<HashMap<String, Arc<DiffResult<ParameterDiff>>>>>,
 
-    example_diff_cache: Rc<RefCell<HashMap<String, Arc<DiffResult<ExampleDiff>>>>>,
-    request_body_diff_cache: Rc<RefCell<HashMap<String, Arc<DiffResult<RequestBodyDiff>>>>>,
+    example_diff_cache:
+        Rc<RefCell<HashMap<String, Arc<DiffResult<ExampleDiff>>>>>,
+    request_body_diff_cache:
+        Rc<RefCell<HashMap<String, Arc<DiffResult<RequestBodyDiff>>>>>,
 
     link_diff_cache: Rc<RefCell<HashMap<String, Arc<DiffResult<LinkDiff>>>>>,
-    security_scheme_diff_cache: Rc<RefCell<HashMap<String, Arc<DiffResult<SecuritySchemeDiff>>>>>,
+    security_scheme_diff_cache:
+        Rc<RefCell<HashMap<String, Arc<DiffResult<SecuritySchemeDiff>>>>>,
 }
 
 impl HttpSchemaDiffContext {
@@ -80,10 +89,16 @@ impl DiffContext for HttpSchemaDiffContext {
             example_diff_cache: Rc::clone(&self.example_diff_cache),
             request_body_diff_cache: Rc::clone(&self.request_body_diff_cache),
             link_diff_cache: Rc::clone(&self.link_diff_cache),
-            security_scheme_diff_cache: Rc::clone(&self.security_scheme_diff_cache),
+            security_scheme_diff_cache: Rc::clone(
+                &self.security_scheme_diff_cache,
+            ),
 
-            source_visited_references: Rc::clone(&self.source_visited_references),
-            target_visited_references: Rc::clone(&self.target_visited_references),
+            source_visited_references: Rc::clone(
+                &self.source_visited_references,
+            ),
+            target_visited_references: Rc::clone(
+                &self.target_visited_references,
+            ),
         }
     }
 
@@ -95,8 +110,12 @@ impl DiffContext for HttpSchemaDiffContext {
             source: Rc::clone(&self.source),
             target: Rc::clone(&self.target),
 
-            source_visited_references: Rc::clone(&self.source_visited_references),
-            target_visited_references: Rc::clone(&self.target_visited_references),
+            source_visited_references: Rc::clone(
+                &self.source_visited_references,
+            ),
+            target_visited_references: Rc::clone(
+                &self.target_visited_references,
+            ),
 
             schema_diff_cache: Rc::clone(&self.schema_diff_cache),
             header_diff_cache: Rc::clone(&self.header_diff_cache),
@@ -106,7 +125,9 @@ impl DiffContext for HttpSchemaDiffContext {
             example_diff_cache: Rc::clone(&self.example_diff_cache),
             request_body_diff_cache: Rc::clone(&self.request_body_diff_cache),
             link_diff_cache: Rc::clone(&self.link_diff_cache),
-            security_scheme_diff_cache: Rc::clone(&self.security_scheme_diff_cache),
+            security_scheme_diff_cache: Rc::clone(
+                &self.security_scheme_diff_cache,
+            ),
         }
     }
 
@@ -115,7 +136,8 @@ impl DiffContext for HttpSchemaDiffContext {
     }
 
     fn add_visited_reference_source(&self, reference: &str) -> Self {
-        let mut source_visited_references = (*self.source_visited_references).clone();
+        let mut source_visited_references =
+            (*self.source_visited_references).clone();
         source_visited_references
             .entry(reference.to_owned())
             .and_modify(|count| *count += 1)
@@ -129,7 +151,9 @@ impl DiffContext for HttpSchemaDiffContext {
             target: Rc::clone(&self.target),
 
             source_visited_references: Rc::new(source_visited_references),
-            target_visited_references: Rc::clone(&self.target_visited_references),
+            target_visited_references: Rc::clone(
+                &self.target_visited_references,
+            ),
 
             schema_diff_cache: Rc::clone(&self.schema_diff_cache),
             header_diff_cache: Rc::clone(&self.header_diff_cache),
@@ -139,7 +163,9 @@ impl DiffContext for HttpSchemaDiffContext {
             example_diff_cache: Rc::clone(&self.example_diff_cache),
             request_body_diff_cache: Rc::clone(&self.request_body_diff_cache),
             link_diff_cache: Rc::clone(&self.link_diff_cache),
-            security_scheme_diff_cache: Rc::clone(&self.security_scheme_diff_cache),
+            security_scheme_diff_cache: Rc::clone(
+                &self.security_scheme_diff_cache,
+            ),
         }
     }
 
@@ -148,7 +174,8 @@ impl DiffContext for HttpSchemaDiffContext {
     }
 
     fn add_visited_reference_target(&self, reference: &str) -> Self {
-        let mut target_visited_references = (*self.target_visited_references).clone();
+        let mut target_visited_references =
+            (*self.target_visited_references).clone();
         target_visited_references
             .entry(reference.to_owned())
             .and_modify(|count| *count += 1)
@@ -161,7 +188,9 @@ impl DiffContext for HttpSchemaDiffContext {
             source: Rc::clone(&self.source),
             target: Rc::clone(&self.target),
 
-            source_visited_references: Rc::clone(&self.source_visited_references),
+            source_visited_references: Rc::clone(
+                &self.source_visited_references,
+            ),
             target_visited_references: Rc::new(target_visited_references),
 
             schema_diff_cache: Rc::clone(&self.schema_diff_cache),
@@ -172,7 +201,9 @@ impl DiffContext for HttpSchemaDiffContext {
             example_diff_cache: Rc::clone(&self.example_diff_cache),
             request_body_diff_cache: Rc::clone(&self.request_body_diff_cache),
             link_diff_cache: Rc::clone(&self.link_diff_cache),
-            security_scheme_diff_cache: Rc::clone(&self.security_scheme_diff_cache),
+            security_scheme_diff_cache: Rc::clone(
+                &self.security_scheme_diff_cache,
+            ),
         }
     }
 
@@ -181,7 +212,10 @@ impl DiffContext for HttpSchemaDiffContext {
     }
 }
 
-pub fn deref_schema<'a>(components: &'a Option<Components>, reference: &str) -> Option<&'a Schema> {
+pub fn deref_schema<'a>(
+    components: &'a Option<Components>,
+    reference: &str,
+) -> Option<&'a Schema> {
     components.as_ref().and_then(|components| {
         components.schemas.as_ref().and_then(|map| {
             map.get(&reference.replace("#/components/schemas/", ""))
@@ -208,7 +242,10 @@ pub fn deref_parameter<'a>(
     })
 }
 
-pub fn deref_example<'a>(schema: &'a HttpSchema, reference: &str) -> Option<&'a Example> {
+pub fn deref_example<'a>(
+    schema: &'a HttpSchema,
+    reference: &str,
+) -> Option<&'a Example> {
     schema.components.as_ref().and_then(|components| {
         components.examples.as_ref().and_then(|map| {
             map.get(&reference.replace("#/components/examples/", ""))
@@ -220,7 +257,10 @@ pub fn deref_example<'a>(schema: &'a HttpSchema, reference: &str) -> Option<&'a 
     })
 }
 
-pub fn deref_request_body<'a>(schema: &'a HttpSchema, reference: &str) -> Option<&'a RequestBody> {
+pub fn deref_request_body<'a>(
+    schema: &'a HttpSchema,
+    reference: &str,
+) -> Option<&'a RequestBody> {
     schema.components.as_ref().and_then(|components| {
         components.request_bodies.as_ref().and_then(|map| {
             map.get(&reference.replace("#/components/requestBodies/", ""))
@@ -232,7 +272,10 @@ pub fn deref_request_body<'a>(schema: &'a HttpSchema, reference: &str) -> Option
     })
 }
 
-pub fn deref_header<'a>(schema: &'a HttpSchema, reference: &str) -> Option<&'a Header> {
+pub fn deref_header<'a>(
+    schema: &'a HttpSchema,
+    reference: &str,
+) -> Option<&'a Header> {
     schema.components.as_ref().and_then(|components| {
         components.headers.as_ref().and_then(|map| {
             map.get(&reference.replace("#/components/headers/", ""))
@@ -259,19 +302,26 @@ pub fn deref_security_scheme<'a>(
     })
 }
 
-pub fn deref_link<'a>(schema: &'a HttpSchema, reference: &str) -> Option<&'a Link> {
+pub fn deref_link<'a>(
+    schema: &'a HttpSchema,
+    reference: &str,
+) -> Option<&'a Link> {
     schema.components.as_ref().and_then(|components| {
         components.links.as_ref().and_then(|map| {
-            map.get(&reference.replace("#/components/links/", ""))
-                .map(|may_be_link| match may_be_link {
+            map.get(&reference.replace("#/components/links/", "")).map(
+                |may_be_link| match may_be_link {
                     MayBeRefCore::Value(value) => value,
                     _ => unimplemented!(),
-                })
+                },
+            )
         })
     })
 }
 
-pub fn deref_response<'a>(schema: &'a HttpSchema, reference: &str) -> Option<&'a Response> {
+pub fn deref_response<'a>(
+    schema: &'a HttpSchema,
+    reference: &str,
+) -> Option<&'a Response> {
     schema.components.as_ref().and_then(|components| {
         components.responses.as_ref().and_then(|map| {
             map.get(&reference.replace("#/components/responses/", ""))
@@ -388,7 +438,12 @@ impl DiffContainer<PathDiff> for HttpSchemaDiffContext {
         None
     }
 
-    fn set_diff(&self, _reference: &str, _component: Arc<DiffResult<PathDiff>>) {}
+    fn set_diff(
+        &self,
+        _reference: &str,
+        _component: Arc<DiffResult<PathDiff>>,
+    ) {
+    }
 }
 
 impl DiffContainer<Value> for HttpSchemaDiffContext {
@@ -400,98 +455,147 @@ impl DiffContainer<Value> for HttpSchemaDiffContext {
 }
 
 impl DiffContainer<SchemaDiff> for HttpSchemaDiffContext {
-    fn get_diff(&self, reference: &str) -> Option<Arc<DiffResult<SchemaDiff>>> {
+    fn get_diff(
+        &self,
+        reference: &str,
+    ) -> Option<Arc<DiffResult<SchemaDiff>>> {
         (*self.schema_diff_cache)
             .borrow()
             .get(reference)
             .map(Arc::clone)
     }
 
-    fn set_diff(&self, reference: &str, component: Arc<DiffResult<SchemaDiff>>) {
-        let _ =
-            RefCell::borrow_mut(&*self.schema_diff_cache).insert(reference.to_string(), component);
+    fn set_diff(
+        &self,
+        reference: &str,
+        component: Arc<DiffResult<SchemaDiff>>,
+    ) {
+        let _ = RefCell::borrow_mut(&*self.schema_diff_cache)
+            .insert(reference.to_string(), component);
     }
 }
 
 impl DiffContainer<ParameterDiff> for HttpSchemaDiffContext {
-    fn get_diff(&self, reference: &str) -> Option<Arc<DiffResult<ParameterDiff>>> {
+    fn get_diff(
+        &self,
+        reference: &str,
+    ) -> Option<Arc<DiffResult<ParameterDiff>>> {
         (*self.parameter_diff_cache)
             .borrow()
             .get(reference)
             .map(Arc::clone)
     }
 
-    fn set_diff(&self, reference: &str, component: Arc<DiffResult<ParameterDiff>>) {
+    fn set_diff(
+        &self,
+        reference: &str,
+        component: Arc<DiffResult<ParameterDiff>>,
+    ) {
         let _ = RefCell::borrow_mut(&*self.parameter_diff_cache)
             .insert(reference.to_string(), component);
     }
 }
 
 impl DiffContainer<HeaderDiff> for HttpSchemaDiffContext {
-    fn get_diff(&self, reference: &str) -> Option<Arc<DiffResult<HeaderDiff>>> {
+    fn get_diff(
+        &self,
+        reference: &str,
+    ) -> Option<Arc<DiffResult<HeaderDiff>>> {
         (*self.header_diff_cache)
             .borrow()
             .get(reference)
             .map(Arc::clone)
     }
 
-    fn set_diff(&self, reference: &str, component: Arc<DiffResult<HeaderDiff>>) {
-        let _ =
-            RefCell::borrow_mut(&*self.header_diff_cache).insert(reference.to_string(), component);
+    fn set_diff(
+        &self,
+        reference: &str,
+        component: Arc<DiffResult<HeaderDiff>>,
+    ) {
+        let _ = RefCell::borrow_mut(&*self.header_diff_cache)
+            .insert(reference.to_string(), component);
     }
 }
 
 impl DiffContainer<ResponseDiff> for HttpSchemaDiffContext {
-    fn get_diff(&self, reference: &str) -> Option<Arc<DiffResult<ResponseDiff>>> {
+    fn get_diff(
+        &self,
+        reference: &str,
+    ) -> Option<Arc<DiffResult<ResponseDiff>>> {
         (*self.response_diff_cache)
             .borrow()
             .get(reference)
             .map(Arc::clone)
     }
 
-    fn set_diff(&self, reference: &str, component: Arc<DiffResult<ResponseDiff>>) {
+    fn set_diff(
+        &self,
+        reference: &str,
+        component: Arc<DiffResult<ResponseDiff>>,
+    ) {
         let _ = RefCell::borrow_mut(&*self.response_diff_cache)
             .insert(reference.to_string(), component);
     }
 }
 
 impl DiffContainer<ExampleDiff> for HttpSchemaDiffContext {
-    fn get_diff(&self, reference: &str) -> Option<Arc<DiffResult<ExampleDiff>>> {
+    fn get_diff(
+        &self,
+        reference: &str,
+    ) -> Option<Arc<DiffResult<ExampleDiff>>> {
         (*self.example_diff_cache)
             .borrow()
             .get(reference)
             .map(Arc::clone)
     }
 
-    fn set_diff(&self, reference: &str, component: Arc<DiffResult<ExampleDiff>>) {
-        let _ =
-            RefCell::borrow_mut(&*self.example_diff_cache).insert(reference.to_string(), component);
+    fn set_diff(
+        &self,
+        reference: &str,
+        component: Arc<DiffResult<ExampleDiff>>,
+    ) {
+        let _ = RefCell::borrow_mut(&*self.example_diff_cache)
+            .insert(reference.to_string(), component);
     }
 }
 
 impl DiffContainer<RequestBodyDiff> for HttpSchemaDiffContext {
-    fn get_diff(&self, reference: &str) -> Option<Arc<DiffResult<RequestBodyDiff>>> {
+    fn get_diff(
+        &self,
+        reference: &str,
+    ) -> Option<Arc<DiffResult<RequestBodyDiff>>> {
         (*self.request_body_diff_cache)
             .borrow()
             .get(reference)
             .map(Arc::clone)
     }
 
-    fn set_diff(&self, reference: &str, component: Arc<DiffResult<RequestBodyDiff>>) {
+    fn set_diff(
+        &self,
+        reference: &str,
+        component: Arc<DiffResult<RequestBodyDiff>>,
+    ) {
         let _ = RefCell::borrow_mut(&*self.request_body_diff_cache)
             .insert(reference.to_string(), component);
     }
 }
 
 impl DiffContainer<SecuritySchemeDiff> for HttpSchemaDiffContext {
-    fn get_diff(&self, reference: &str) -> Option<Arc<DiffResult<SecuritySchemeDiff>>> {
+    fn get_diff(
+        &self,
+        reference: &str,
+    ) -> Option<Arc<DiffResult<SecuritySchemeDiff>>> {
         (*self.security_scheme_diff_cache)
             .borrow()
             .get(reference)
             .map(Arc::clone)
     }
 
-    fn set_diff(&self, reference: &str, component: Arc<DiffResult<SecuritySchemeDiff>>) {
+    fn set_diff(
+        &self,
+        reference: &str,
+        component: Arc<DiffResult<SecuritySchemeDiff>>,
+    ) {
         let _ = RefCell::borrow_mut(&*self.security_scheme_diff_cache)
             .insert(reference.to_string(), component);
     }
@@ -506,7 +610,7 @@ impl DiffContainer<LinkDiff> for HttpSchemaDiffContext {
     }
 
     fn set_diff(&self, reference: &str, component: Arc<DiffResult<LinkDiff>>) {
-        let _ =
-            RefCell::borrow_mut(&*self.link_diff_cache).insert(reference.to_string(), component);
+        let _ = RefCell::borrow_mut(&*self.link_diff_cache)
+            .insert(reference.to_string(), component);
     }
 }

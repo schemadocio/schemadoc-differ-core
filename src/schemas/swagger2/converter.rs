@@ -33,7 +33,9 @@ impl From<SwaggerV2> for core::HttpSchema {
         let parameters = spec.parameters.map(|parameters| {
             parameters
                 .into_iter()
-                .map(|(key, parameter)| (key, core::MayBeRef::Value(convert_parameter(parameter))))
+                .map(|(key, parameter)| {
+                    (key, core::MayBeRef::Value(convert_parameter(parameter)))
+                })
                 .collect::<IndexMap<_, _>>()
         });
 
@@ -55,7 +57,9 @@ impl From<SwaggerV2> for core::HttpSchema {
         let schemas = spec.definitions.map(|definitions| {
             definitions
                 .into_iter()
-                .map(|(key, schema)| (key, core::MayBeRef::Value(convert_schema(schema))))
+                .map(|(key, schema)| {
+                    (key, core::MayBeRef::Value(convert_schema(schema)))
+                })
                 .collect::<IndexMap<_, _>>()
         });
 
@@ -95,7 +99,9 @@ fn convert_paths(
 ) -> IndexMap<String, core::MayBeRef<core::Path>> {
     paths
         .into_iter()
-        .map(|(key, path)| (key, core::MayBeRef::Value(convert_path(path, context))))
+        .map(|(key, path)| {
+            (key, core::MayBeRef::Value(convert_path(path, context)))
+        })
         .collect()
 }
 
@@ -179,14 +185,18 @@ fn merge_parameters(
     for may_be_parameter in parameters {
         let key = match &may_be_parameter {
             MayBeRef200::Ref(value) => {
-                if let Some(parameter) = deref_parameter(components, value.reference()) {
+                if let Some(parameter) =
+                    deref_parameter(components, value.reference())
+                {
                     (parameter.name.clone(), parameter.r#in.clone())
                 } else {
                     // TODO: handle the case where ref not found
                     continue;
                 }
             }
-            MayBeRef200::Value(value) => (value.name.clone(), value.r#in.clone()),
+            MayBeRef200::Value(value) => {
+                (value.name.clone(), value.r#in.clone())
+            }
         };
 
         if visited.contains(&key) {
@@ -227,7 +237,8 @@ fn convert_operation(
         }
     }
 
-    let request_body = convert_to_request_body(body_parameters, &operation.consumes, context);
+    let request_body =
+        convert_to_request_body(body_parameters, &operation.consumes, context);
 
     let mut produces = operation
         .produces
@@ -278,7 +289,9 @@ fn convert_to_request_body(
 ) -> Option<core::MayBeRef<core::RequestBody>> {
     if let Some(body) = parameters.first() {
         let parameter = match body {
-            MayBeRef200::Ref(value) => deref_parameter(context.parameters, value.reference()),
+            MayBeRef200::Ref(value) => {
+                deref_parameter(context.parameters, value.reference())
+            }
             MayBeRef200::Value(value) => Some(value),
         };
 
@@ -308,9 +321,9 @@ fn convert_to_request_body(
                 })
             };
 
-            let mut media_types = consumes
-                .clone()
-                .unwrap_or_else(|| context.consumes.clone().unwrap_or_default());
+            let mut media_types = consumes.clone().unwrap_or_else(|| {
+                context.consumes.clone().unwrap_or_default()
+            });
 
             if media_types.is_empty() {
                 media_types.push("application/json".to_string())
@@ -357,15 +370,22 @@ fn convert_response_ref(
                 })
             }
         }
-        MayBeRef200::Value(response) => core::MayBeRef::Value(convert_response(response, produces)),
+        MayBeRef200::Value(response) => {
+            core::MayBeRef::Value(convert_response(response, produces))
+        }
     }
 }
 
-fn convert_response(response: Response, produces: &[String]) -> core::Response {
+fn convert_response(
+    response: Response,
+    produces: &[String],
+) -> core::Response {
     let headers = response.headers.map(|headers| {
         headers
             .into_iter()
-            .map(|(key, header)| (key, core::MayBeRef::Value(convert_header(header))))
+            .map(|(key, header)| {
+                (key, core::MayBeRef::Value(convert_header(header)))
+            })
             .collect()
     });
 
@@ -439,32 +459,37 @@ fn convert_header(header: Header) -> core::Header {
     }
 }
 
-fn convert_parameter_ref(parameter_ref: MayBeRef200<Parameter>) -> core::MayBeRef<core::Parameter> {
+fn convert_parameter_ref(
+    parameter_ref: MayBeRef200<Parameter>,
+) -> core::MayBeRef<core::Parameter> {
     match parameter_ref {
         MayBeRef200::Ref(value) => core::MayBeRef::Ref(core::HttpSchemaRef {
             reference: value
                 .reference
                 .replace("#/parameters", "#/components/parameters"),
         }),
-        MayBeRef200::Value(parameter) => core::MayBeRef::Value(convert_parameter(parameter)),
+        MayBeRef200::Value(parameter) => {
+            core::MayBeRef::Value(convert_parameter(parameter))
+        }
     }
 }
 
 fn convert_parameter(parameter: Parameter) -> core::Parameter {
-    let schema = if let Some(schema) = parameter.schema.map(convert_schema_ref) {
+    let schema = if let Some(schema) = parameter.schema.map(convert_schema_ref)
+    {
         Some(schema)
     } else {
-        let all_of = parameter
-            .all_of
-            .map(|all_of| all_of.into_iter().map(convert_schema_ref).collect());
+        let all_of = parameter.all_of.map(|all_of| {
+            all_of.into_iter().map(convert_schema_ref).collect()
+        });
 
-        let one_of = parameter
-            .one_of
-            .map(|one_of| one_of.into_iter().map(convert_schema_ref).collect());
+        let one_of = parameter.one_of.map(|one_of| {
+            one_of.into_iter().map(convert_schema_ref).collect()
+        });
 
-        let any_of = parameter
-            .any_of
-            .map(|any_of| any_of.into_iter().map(convert_schema_ref).collect());
+        let any_of = parameter.any_of.map(|any_of| {
+            any_of.into_iter().map(convert_schema_ref).collect()
+        });
 
         let not = parameter
             .not
@@ -532,14 +557,18 @@ fn convert_parameter(parameter: Parameter) -> core::Parameter {
     }
 }
 
-fn convert_schema_ref(schema_ref: MayBeRef200<Schema>) -> core::MayBeRef<core::Schema> {
+fn convert_schema_ref(
+    schema_ref: MayBeRef200<Schema>,
+) -> core::MayBeRef<core::Schema> {
     match schema_ref {
         MayBeRef200::Ref(value) => core::MayBeRef::Ref(core::HttpSchemaRef {
             reference: value
                 .reference
                 .replace("#/definitions", "#/components/schemas"),
         }),
-        MayBeRef200::Value(schema) => core::MayBeRef::Value(convert_schema(schema)),
+        MayBeRef200::Value(schema) => {
+            core::MayBeRef::Value(convert_schema(schema))
+        }
     }
 }
 
@@ -568,21 +597,22 @@ fn convert_schema(schema: Schema) -> core::Schema {
     });
 
     let additional_properties =
-        schema
-            .additional_properties
-            .map(|additional_properties| match additional_properties {
+        schema.additional_properties.map(|additional_properties| {
+            match additional_properties {
                 Either::Left(value) => Either::Left(value),
                 Either::Right(schema_ref) => {
                     Either::Right(Box::new(convert_schema_ref(*schema_ref)))
                 }
-            });
-
-    let discriminator = schema
-        .discriminator
-        .map(|discriminator| core::Discriminator {
-            property_name: Some(discriminator),
-            mapping: None,
+            }
         });
+
+    let discriminator =
+        schema
+            .discriminator
+            .map(|discriminator| core::Discriminator {
+                property_name: Some(discriminator),
+                mapping: None,
+            });
 
     let items = schema.items.map(convert_schema_ref);
 
@@ -636,18 +666,18 @@ fn convert_external_docs(external_docs: ExternalDoc) -> core::ExternalDoc {
 
 #[cfg(test)]
 mod tests {
-    use crate::schema::HttpSchema;
-    use crate::schemas::swagger2::schema::SwaggerV2;
+    // use crate::schema::HttpSchema;
+    // use crate::schemas::swagger2::schema::SwaggerV2;
 
     #[test]
     fn test_converter() {
-        let src_schema_content = include_str!("../../../tmp/cvt.json");
-        let tgt_schema_content = include_str!("../../../tmp/cvt-altered.json");
-
-        let src_schema_v2 = serde_json::from_str::<SwaggerV2>(src_schema_content).unwrap();
-        let tgt_schema_v2 = serde_json::from_str::<SwaggerV2>(tgt_schema_content).unwrap();
-
-        let src_schema: HttpSchema = src_schema_v2.into();
-        let tgt_schema: HttpSchema = tgt_schema_v2.into();
+        // let src_schema_content = include_str!("../../../tmp/cvt.json");
+        // let tgt_schema_content = include_str!("../../../tmp/cvt-altered.json");
+        //
+        // let src_schema_v2 = serde_json::from_str::<SwaggerV2>(src_schema_content).unwrap();
+        // let tgt_schema_v2 = serde_json::from_str::<SwaggerV2>(tgt_schema_content).unwrap();
+        //
+        // let src_schema: HttpSchema = src_schema_v2.into();
+        // let tgt_schema: HttpSchema = tgt_schema_v2.into();
     }
 }

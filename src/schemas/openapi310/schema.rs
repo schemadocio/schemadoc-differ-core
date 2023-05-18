@@ -101,7 +101,8 @@ pub struct Components {
     pub examples: Option<IndexMap<String, MayBeRef310<Example>>>,
     pub request_bodies: Option<IndexMap<String, MayBeRef310<RequestBody>>>,
     pub headers: Option<IndexMap<String, MayBeRef310<Header>>>,
-    pub security_schemes: Option<IndexMap<String, MayBeRef310<SecurityScheme>>>,
+    pub security_schemes:
+        Option<IndexMap<String, MayBeRef310<SecurityScheme>>>,
     pub links: Option<IndexMap<String, MayBeRef310<Link>>>,
     // pub callbacks: Option<HashMap<String, MayBeRef310<Header>>>,
 }

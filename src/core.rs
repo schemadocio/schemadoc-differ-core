@@ -1,10 +1,9 @@
 use serde::{Deserialize, Deserializer, Serialize};
 use std::borrow::Cow;
-use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use serde::__private::de::{Content, ContentRefDeserializer};
 use serde_json::Value;
 use std::ops::Deref;
@@ -129,9 +128,10 @@ impl<T> DiffResult<T> {
             DiffResult::Added(v) => DiffResult::Added(v),
             DiffResult::Removed(v) => DiffResult::Removed(v),
 
-            DiffResult::Updated(new, old) => {
-                DiffResult::Updated(new, old.as_ref().map(|old| Box::new(&**old)))
-            }
+            DiffResult::Updated(new, old) => DiffResult::Updated(
+                new,
+                old.as_ref().map(|old| Box::new(&**old)),
+            ),
         }
     }
 }
@@ -142,7 +142,11 @@ pub trait Referencable {}
 impl Referencable for Value {}
 
 pub trait Diff<With, Output, Context: DiffContext> {
-    fn diff(&self, new: Option<&With>, context: &Context) -> DiffResult<Output>;
+    fn diff(
+        &self,
+        new: Option<&With>,
+        context: &Context,
+    ) -> DiffResult<Output>;
 }
 
 pub trait Empty {
@@ -204,26 +208,43 @@ impl<LD, RD> Empty for EitherDiff<LD, RD> {
     }
 }
 
-impl<L, R, LD, RD, C: DiffContext> Diff<Either<L, R>, EitherDiff<LD, RD>, C> for Either<L, R>
+impl<L, R, LD, RD, C: DiffContext> Diff<Either<L, R>, EitherDiff<LD, RD>, C>
+    for Either<L, R>
 where
     L: Diff<L, LD, C>,
     R: Diff<R, RD, C>,
 {
-    fn diff(&self, new: Option<&Either<L, R>>, context: &C) -> DiffResult<EitherDiff<LD, RD>> {
+    fn diff(
+        &self,
+        new: Option<&Either<L, R>>,
+        context: &C,
+    ) -> DiffResult<EitherDiff<LD, RD>> {
         let diff = match new {
             None => DiffResult::Removed(match self {
-                Either::Left(l) => EitherDiff::Left(l.diff(None, &context.removing())),
-                Either::Right(r) => EitherDiff::Right(Box::new(r.diff(None, &context.removing()))),
+                Either::Left(l) => {
+                    EitherDiff::Left(l.diff(None, &context.removing()))
+                }
+                Either::Right(r) => EitherDiff::Right(Box::new(
+                    r.diff(None, &context.removing()),
+                )),
             }),
             Some(value) => {
                 let diff = match value {
                     Either::Left(vl) => match self {
-                        Either::Left(l) => EitherDiff::Left(l.diff(Option::from(vl), context)),
-                        Either::Right(_) => EitherDiff::ToLeft(Box::new(vl.diff(None, context))),
+                        Either::Left(l) => {
+                            EitherDiff::Left(l.diff(Option::from(vl), context))
+                        }
+                        Either::Right(_) => EitherDiff::ToLeft(Box::new(
+                            vl.diff(None, context),
+                        )),
                     },
                     Either::Right(vr) => match self {
-                        Either::Left(_) => EitherDiff::ToRight(Box::new(vr.diff(None, context))),
-                        Either::Right(r) => EitherDiff::Right(Box::new(r.diff(Some(vr), context))),
+                        Either::Left(_) => EitherDiff::ToRight(Box::new(
+                            vr.diff(None, context),
+                        )),
+                        Either::Right(r) => EitherDiff::Right(Box::new(
+                            r.diff(Some(vr), context),
+                        )),
                     },
                 };
 
@@ -258,7 +279,8 @@ where
     where
         D: Deserializer<'de>,
     {
-        let content = match <Content as Deserialize>::deserialize(deserializer) {
+        let content = match <Content as Deserialize>::deserialize(deserializer)
+        {
             Ok(val) => val,
             Err(err) => {
                 return Err(err);
@@ -266,7 +288,9 @@ where
         };
 
         if let Ok(ok) = Result::map(
-            <R as Deserialize>::deserialize(ContentRefDeserializer::<D::Error>::new(&content)),
+            <R as Deserialize>::deserialize(
+                ContentRefDeserializer::<D::Error>::new(&content),
+            ),
             MayBeRefCore::Ref,
         ) {
             return Ok(ok);
@@ -294,10 +318,23 @@ impl<T, R: ReferenceDescriptor> MayBeRefCore<T, R> {
     }
 
     pub fn reference(&self) -> Option<&str> {
-        if let MayBeRefCore::Ref(rd) = self {
-            Some(rd.reference())
-        } else {
-            None
+        match self {
+            MayBeRefCore::Ref(rd) => Some(rd.reference()),
+            _ => None,
+        }
+    }
+
+    pub fn value(&self) -> Option<&T> {
+        match self {
+            MayBeRefCore::Value(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    pub fn value_mut(&mut self) -> Option<&mut T> {
+        match self {
+            MayBeRefCore::Value(v) => Some(v),
+            _ => None,
         }
     }
 }
@@ -324,13 +361,16 @@ where
     }
 }
 
-impl<T, O, R, C: DiffContext> Diff<MayBeRefCore<T, R>, MayBeRefCoreDiff<O, R>, C>
-    for MayBeRefCore<T, R>
+impl<T, O, R, C: DiffContext>
+    Diff<MayBeRefCore<T, R>, MayBeRefCoreDiff<O, R>, C> for MayBeRefCore<T, R>
 where
     T: Diff<T, O, C> + Clone + Debug + 'static,
     O: Referencable + Clone + Debug + 'static,
     R: ReferenceDescriptor + Clone + Debug + 'static,
-    C: DiffContext + ComponentContainer<T> + DiffContainer<O> + ToOwned<Owned = C>,
+    C: DiffContext
+        + ComponentContainer<T>
+        + DiffContainer<O>
+        + ToOwned<Owned = C>,
 {
     fn diff(
         &self,
@@ -339,14 +379,18 @@ where
     ) -> DiffResult<MayBeRefCoreDiff<O, R>> {
         let diff = match new {
             None => DiffResult::Removed(match self {
-                MayBeRefCore::Ref(value) => MayBeRefCoreDiff::Ref(value.clone()),
-                MayBeRefCore::Value(value) => {
-                    MayBeRefCoreDiff::Value(Arc::new(value.diff(None, context)))
+                MayBeRefCore::Ref(value) => {
+                    MayBeRefCoreDiff::Ref(value.clone())
                 }
+                MayBeRefCore::Value(value) => MayBeRefCoreDiff::Value(
+                    Arc::new(value.diff(None, context)),
+                ),
             }),
             Some(value) => {
-                let cached_diff = if let (MayBeRefCore::Ref(old_ref), MayBeRefCore::Ref(new_ref)) =
-                    (self, value)
+                let cached_diff = if let (
+                    MayBeRefCore::Ref(old_ref),
+                    MayBeRefCore::Ref(new_ref),
+                ) = (self, value)
                 {
                     if old_ref.reference() == new_ref.reference() {
                         context.get_diff(old_ref.reference())
@@ -360,26 +404,35 @@ where
                 let diff = if let Some(diff) = &cached_diff {
                     Arc::clone(diff)
                 } else {
-                    let context = if let MayBeRefCore::Ref(old_ref) = self {
-                        Cow::Owned(context.add_visited_reference_source(old_ref.reference()))
-                    } else {
-                        Cow::Borrowed(context)
-                    };
-                    let context = if let MayBeRefCore::Ref(new_ref) = value {
-                        Cow::Owned(context.add_visited_reference_target(new_ref.reference()))
-                    } else {
-                        context
-                    };
+                    let context =
+                        if let MayBeRefCore::Ref(old_ref) = self {
+                            Cow::Owned(context.add_visited_reference_source(
+                                old_ref.reference(),
+                            ))
+                        } else {
+                            Cow::Borrowed(context)
+                        };
+                    let context =
+                        if let MayBeRefCore::Ref(new_ref) = value {
+                            Cow::Owned(context.add_visited_reference_target(
+                                new_ref.reference(),
+                            ))
+                        } else {
+                            context
+                        };
 
                     let (old_value, new_value) = match (self, value) {
-                        (MayBeRefCore::Ref(old_ref), MayBeRefCore::Ref(new_ref)) => {
+                        (
+                            MayBeRefCore::Ref(old_ref),
+                            MayBeRefCore::Ref(new_ref),
+                        ) => {
                             let old_reference = old_ref.reference();
                             let new_reference = new_ref.reference();
 
-                            let old_visited_count =
-                                context.check_visited_reference_source(old_reference);
-                            let new_visited_count =
-                                context.check_visited_reference_target(new_reference);
+                            let old_visited_count = context
+                                .check_visited_reference_source(old_reference);
+                            let new_visited_count = context
+                                .check_visited_reference_target(new_reference);
 
                             if old_visited_count > 1 && new_visited_count > 1 {
                                 return DiffResult::None;
@@ -390,17 +443,26 @@ where
 
                             (source, target)
                         }
-                        (MayBeRefCore::Value(old_value), MayBeRefCore::Value(new_value)) => {
-                            (Some(old_value), Some(new_value))
-                        }
+                        (
+                            MayBeRefCore::Value(old_value),
+                            MayBeRefCore::Value(new_value),
+                        ) => (Some(old_value), Some(new_value)),
 
-                        (MayBeRefCore::Value(old_value), MayBeRefCore::Ref(new_ref)) => {
-                            let target = context.deref_target(new_ref.reference());
+                        (
+                            MayBeRefCore::Value(old_value),
+                            MayBeRefCore::Ref(new_ref),
+                        ) => {
+                            let target =
+                                context.deref_target(new_ref.reference());
                             (Some(old_value), target)
                         }
 
-                        (MayBeRefCore::Ref(old_ref), MayBeRefCore::Value(new_value)) => {
-                            let source = context.deref_source(old_ref.reference());
+                        (
+                            MayBeRefCore::Ref(old_ref),
+                            MayBeRefCore::Value(new_value),
+                        ) => {
+                            let source =
+                                context.deref_source(old_ref.reference());
                             (source, Some(new_value))
                         }
                     };
@@ -413,7 +475,9 @@ where
                             DiffResult::new(DiffResult::None, &*context)
                         } else {
                             DiffResult::new(
-                                DiffResult::Added(MayBeRefCoreDiff::Value(Arc::new(diff))),
+                                DiffResult::Added(MayBeRefCoreDiff::Value(
+                                    Arc::new(diff),
+                                )),
                                 &*context,
                             )
                         };
@@ -430,23 +494,25 @@ where
                 };
 
                 match (self, value) {
-                    (MayBeRefCore::Ref(old_ref), MayBeRefCore::Ref(new_ref))
-                        if old_ref.reference() == new_ref.reference() =>
-                    {
+                    (
+                        MayBeRefCore::Ref(old_ref),
+                        MayBeRefCore::Ref(new_ref),
+                    ) if old_ref.reference() == new_ref.reference() => {
                         let result = match &*diff {
                             DiffResult::None => DiffResult::None,
-                            DiffResult::Same(_) => {
-                                DiffResult::Same(MayBeRefCoreDiff::Ref(old_ref.clone()))
-                            }
-                            DiffResult::Added(_) => {
-                                DiffResult::Added(MayBeRefCoreDiff::Ref(old_ref.clone()))
-                            }
-                            DiffResult::Removed(_) => {
-                                DiffResult::Removed(MayBeRefCoreDiff::Ref(old_ref.clone()))
-                            }
-                            DiffResult::Updated(_, _) => {
-                                DiffResult::Updated(MayBeRefCoreDiff::Ref(old_ref.clone()), None)
-                            }
+                            DiffResult::Same(_) => DiffResult::Same(
+                                MayBeRefCoreDiff::Ref(old_ref.clone()),
+                            ),
+                            DiffResult::Added(_) => DiffResult::Added(
+                                MayBeRefCoreDiff::Ref(old_ref.clone()),
+                            ),
+                            DiffResult::Removed(_) => DiffResult::Removed(
+                                MayBeRefCoreDiff::Ref(old_ref.clone()),
+                            ),
+                            DiffResult::Updated(_, _) => DiffResult::Updated(
+                                MayBeRefCoreDiff::Ref(old_ref.clone()),
+                                None,
+                            ),
                         };
 
                         if cached_diff.is_none() {
@@ -462,7 +528,10 @@ where
                         if diff.is_same_or_none() {
                             DiffResult::Same(MayBeRefCoreDiff::Value(diff))
                         } else {
-                            DiffResult::Updated(MayBeRefCoreDiff::Value(diff), None)
+                            DiffResult::Updated(
+                                MayBeRefCoreDiff::Value(diff),
+                                None,
+                            )
                         }
                     }
                 }
@@ -530,25 +599,33 @@ impl<V, R> Deref for MapDiff<V, R> {
     }
 }
 
-impl<V, O, C, R> Diff<IndexMap<String, V>, MapDiff<O, R>, C> for IndexMap<String, V>
+impl<V, O, C, R> Diff<IndexMap<String, V>, MapDiff<O, R>, C>
+    for IndexMap<String, V>
 where
     V: Diff<V, O, C> + Clone + Debug,
     R: PathResolver,
     C: DiffContext,
     O: Debug,
 {
-    fn diff(&self, new: Option<&IndexMap<String, V>>, context: &C) -> DiffResult<MapDiff<O, R>> {
+    fn diff(
+        &self,
+        new: Option<&IndexMap<String, V>>,
+        context: &C,
+    ) -> DiffResult<MapDiff<O, R>> {
         let diff = match new {
             None => DiffResult::Removed(MapDiff(
                 self.iter()
-                    .map(|(key, value)| (key.to_owned(), value.diff(None, &context.removing())))
+                    .map(|(key, value)| {
+                        (key.to_owned(), value.diff(None, &context.removing()))
+                    })
                     .collect(),
                 PhantomData,
             )),
             Some(other) => {
                 let resolver = R::new(self.keys(), other.keys());
 
-                let mut result: IndexMap<String, DiffResult<O>> = Default::default();
+                let mut result: IndexMap<String, DiffResult<O>> =
+                    Default::default();
 
                 for (k1, v1) in self.iter() {
                     let k2 = resolver.k1tok2(k1);
@@ -569,7 +646,8 @@ where
                     }
                 }));
 
-                let is_same = result.iter().all(|(_key, value)| value.is_same_or_none());
+                let is_same =
+                    result.iter().all(|(_key, value)| value.is_same_or_none());
 
                 let diff = MapDiff(result, PhantomData);
 
@@ -618,31 +696,38 @@ where
     S: VecDiffTransformer<Vec<DiffResult<O>>>,
     O: Debug,
 {
-    fn diff(&self, new: Option<&Vec<T>>, context: &C) -> DiffResult<VecDiff<O, S>> {
+    fn diff(
+        &self,
+        new: Option<&Vec<T>>,
+        context: &C,
+    ) -> DiffResult<VecDiff<O, S>> {
         let diff = match new {
             None => DiffResult::Removed(VecDiff(
                 self.iter().map(|x| x.diff(None, context)).collect(),
                 PhantomData,
             )),
             Some(value) => {
-                let o: HashMap<_, _> = self
+                let o: IndexMap<_, _> = self
                     .iter()
                     .enumerate()
                     .map(|(idx, v)| (v.key(idx), v))
                     .collect();
 
-                let n: HashMap<_, _> = value
+                let n: IndexMap<_, _> = value
                     .iter()
                     .enumerate()
                     .map(|(idx, v)| (v.key(idx), v))
                     .collect();
 
-                let o_keys: HashSet<_> = o.keys().collect();
-                let n_keys: HashSet<_> = n.keys().collect();
+                let o_keys: IndexSet<_> = o.keys().collect();
+                let n_keys: IndexSet<_> = n.keys().collect();
 
-                let new_keys: HashSet<_> = n_keys.difference(&o_keys).collect();
-                let removed_keys: HashSet<_> = o_keys.difference(&n_keys).collect();
-                let updated_keys: HashSet<_> = o_keys.intersection(&n_keys).collect();
+                let new_keys: IndexSet<_> =
+                    n_keys.difference(&o_keys).collect();
+                let removed_keys: IndexSet<_> =
+                    o_keys.difference(&n_keys).collect();
+                let updated_keys: IndexSet<_> =
+                    o_keys.intersection(&n_keys).collect();
 
                 let added: Vec<_> = new_keys
                     .into_iter()
@@ -675,7 +760,8 @@ where
                     .chain(removed.into_iter())
                     .collect();
 
-                let is_same = values.iter().all(|value| value.is_same_or_none());
+                let is_same =
+                    values.iter().all(|value| value.is_same_or_none());
 
                 let values = S::transform(values);
 
@@ -700,7 +786,10 @@ impl<C: DiffContext> Diff<Value, Value, C> for Value {
                 if self == value {
                     DiffResult::Same(value.clone())
                 } else {
-                    DiffResult::Updated(value.clone(), Some(Box::new(self.clone())))
+                    DiffResult::Updated(
+                        value.clone(),
+                        Some(Box::new(self.clone())),
+                    )
                 }
             }
         };
@@ -749,7 +838,11 @@ macro_rules! impl_keyed_diff {
         }
 
         impl<C: DiffContext> Diff<$typ, $typ, C> for $typ {
-            fn diff(&self, new: Option<&$typ>, context: &C) -> DiffResult<$typ> {
+            fn diff(
+                &self,
+                new: Option<&$typ>,
+                context: &C,
+            ) -> DiffResult<$typ> {
                 let diff = match new {
                     None => DiffResult::Removed(*self),
                     Some(value) => {
@@ -783,7 +876,10 @@ impl<C: DiffContext> Diff<Self, String, C> for String {
                 if self == value {
                     DiffResult::Same(value.to_string())
                 } else {
-                    DiffResult::Updated(value.to_string(), Some(Box::new(self.to_string())))
+                    DiffResult::Updated(
+                        value.to_string(),
+                        Some(Box::new(self.to_string())),
+                    )
                 }
             }
         };

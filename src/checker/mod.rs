@@ -4,8 +4,8 @@ pub mod added_required_request_body_check;
 pub mod removed_media_type_check;
 pub mod removed_operation_check;
 pub mod removed_response_property_check;
-pub mod schema_enum_value_removed_check;
-pub mod schema_type_changed_check;
+pub mod removed_schema_enum_value_check;
+pub mod updated_schema_type_check;
 
 use crate::path_pointer::PathPointer;
 use crate::schema_diff::HttpSchemaDiff;
@@ -18,8 +18,8 @@ use crate::checker::added_required_request_body_check::AddedRequiredRequestBodyC
 use crate::checker::removed_media_type_check::RemovedMediaTypeCheck;
 use crate::checker::removed_operation_check::RemovedOperationCheck;
 use crate::checker::removed_response_property_check::RemovedResponsePropertyCheck;
-use crate::checker::schema_enum_value_removed_check::SchemaEnumValueRemovedCheck;
-use crate::checker::schema_type_changed_check::ChangedSchemaTypeCheck;
+use crate::checker::removed_schema_enum_value_check::RemovedSchemaEnumValueCheck;
+use crate::checker::updated_schema_type_check::UpdatedSchemaTypeCheck;
 
 #[derive(Debug)]
 pub struct ValidationIssue {
@@ -60,15 +60,23 @@ trait ValidationIssuer<'s> {
     fn issues(&self) -> Option<Vec<ValidationIssue>>;
 }
 
-pub fn validate(diff: &HttpSchemaDiff, checkers: &[&str]) -> Vec<ValidationIssue> {
+pub fn validate(
+    diff: &HttpSchemaDiff,
+    checkers: &[&str],
+) -> Vec<ValidationIssue> {
     let removed_operation = Box::<RemovedOperationCheck>::default();
     let removed_media_type = Box::<RemovedMediaTypeCheck>::default();
-    let changed_schema_type = Box::<ChangedSchemaTypeCheck>::default();
-    let removed_schema_enum_value = Box::<SchemaEnumValueRemovedCheck>::default();
-    let added_required_parameter = Box::<AddedRequiredParameterCheck>::default();
-    let removed_response_property = Box::<RemovedResponsePropertyCheck>::default();
-    let added_required_request_body = Box::<AddedRequiredRequestBodyCheck>::default();
-    let added_required_body_property = Box::<AddedRequiredBodyPropertyCheck>::default();
+    let changed_schema_type = Box::<UpdatedSchemaTypeCheck>::default();
+    let removed_schema_enum_value =
+        Box::<RemovedSchemaEnumValueCheck>::default();
+    let added_required_parameter =
+        Box::<AddedRequiredParameterCheck>::default();
+    let removed_response_property =
+        Box::<RemovedResponsePropertyCheck>::default();
+    let added_required_request_body =
+        Box::<AddedRequiredRequestBodyCheck>::default();
+    let added_required_body_property =
+        Box::<AddedRequiredBodyPropertyCheck>::default();
 
     let available_issuers: Vec<&dyn ValidationIssuer> = vec![
         &*removed_operation,
@@ -81,10 +89,14 @@ pub fn validate(diff: &HttpSchemaDiff, checkers: &[&str]) -> Vec<ValidationIssue
         &*added_required_body_property,
     ];
 
-    let issuers: Vec<_> = available_issuers
-        .into_iter()
-        .filter(|issuer| checkers.contains(&"*") || checkers.contains(&issuer.id()))
-        .collect();
+    let issuers: Vec<_> = if checkers.contains(&"*") {
+        available_issuers
+    } else {
+        available_issuers
+            .into_iter()
+            .filter(|issuer| checkers.contains(&issuer.id()))
+            .collect()
+    };
 
     let visitors: Vec<_> = issuers.iter().map(|v| v.visitor()).collect();
 

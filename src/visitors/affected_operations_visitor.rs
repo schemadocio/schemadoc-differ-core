@@ -5,9 +5,9 @@ use crate::core::{DiffResult, MapDiff, VecDiff};
 use crate::diff_result_type::DiffResultType;
 use crate::path_pointer::PathPointer;
 use crate::schema_diff::{
-    deref_parameter_diff, deref_request_body_diff, deref_response_diff, deref_schema_diff,
-    HttpSchemaDiff, MayBeRefDiff, MediaTypeDiff, OperationDiff, ParameterDiff, RequestBodyDiff,
-    ResponseDiff, SchemaDiff,
+    deref_parameter_diff, deref_request_body_diff, deref_response_diff,
+    deref_schema_diff, HttpSchemaDiff, MayBeRefDiff, MediaTypeDiff,
+    OperationDiff, ParameterDiff, RequestBodyDiff, ResponseDiff, SchemaDiff,
 };
 
 use crate::visitor::{dispatch_visitor, DiffVisitor};
@@ -42,11 +42,20 @@ impl<'s> SharedChangesVisitor<'s> {
 }
 
 impl<'s> DiffVisitor<'s> for SharedChangesVisitor<'s> {
-    fn visit_operation(&self, p: &PathPointer, _: &str, _: &'s DiffResult<OperationDiff>) -> bool {
+    fn visit_operation(
+        &self,
+        p: &PathPointer,
+        _: &str,
+        _: &'s DiffResult<OperationDiff>,
+    ) -> bool {
         p.parent().is_updated()
     }
 
-    fn visit_request_body(&self, p: &PathPointer, _: &'s DiffResult<RequestBodyDiff>) -> bool {
+    fn visit_request_body(
+        &self,
+        p: &PathPointer,
+        _: &'s DiffResult<RequestBodyDiff>,
+    ) -> bool {
         p.parent().is_updated()
     }
 
@@ -65,7 +74,11 @@ impl<'s> DiffVisitor<'s> for SharedChangesVisitor<'s> {
     ) -> bool {
         p.parent().is_updated()
     }
-    fn visit_media_type(&self, p: &PathPointer, _: &'s DiffResult<MediaTypeDiff>) -> bool {
+    fn visit_media_type(
+        &self,
+        p: &PathPointer,
+        _: &'s DiffResult<MediaTypeDiff>,
+    ) -> bool {
         p.parent().is_updated()
     }
 
@@ -77,11 +90,19 @@ impl<'s> DiffVisitor<'s> for SharedChangesVisitor<'s> {
         p.parent().is_updated()
     }
 
-    fn visit_parameter(&self, p: &PathPointer, _: &'s DiffResult<ParameterDiff>) -> bool {
+    fn visit_parameter(
+        &self,
+        p: &PathPointer,
+        _: &'s DiffResult<ParameterDiff>,
+    ) -> bool {
         p.parent().is_updated()
     }
 
-    fn visit_schema(&self, p: &PathPointer, _: &'s DiffResult<SchemaDiff>) -> bool {
+    fn visit_schema(
+        &self,
+        p: &PathPointer,
+        _: &'s DiffResult<SchemaDiff>,
+    ) -> bool {
         p.parent().is_updated()
     }
 
@@ -232,7 +253,9 @@ impl<'s> DiffVisitor<'s> for SharedChangesVisitor<'s> {
     }
 }
 
-pub fn get_shared_changes(diff: &HttpSchemaDiff) -> HashMap<SharedChange, Vec<PathPointer>> {
+pub fn get_shared_changes(
+    diff: &HttpSchemaDiff,
+) -> HashMap<SharedChange, Vec<PathPointer>> {
     let visitor = SharedChangesVisitor::new(diff);
 
     dispatch_visitor(diff, &visitor);

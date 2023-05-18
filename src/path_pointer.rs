@@ -18,6 +18,18 @@ impl PointerAncestor {
     pub fn operation() -> Self {
         Self::Scope(PathPointerScope::Operation)
     }
+
+    pub fn schema() -> Self {
+        Self::Scope(PathPointerScope::Schema)
+    }
+
+    pub fn schema_property() -> Self {
+        Self::Scope(PathPointerScope::SchemaProperty)
+    }
+
+    pub fn schema_properties() -> Self {
+        Self::Scope(PathPointerScope::SchemaProperties)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -101,7 +113,10 @@ impl PathPointer {
         new
     }
 
-    pub fn get(&self, scope: PathPointerScope) -> Option<&PathPointerComponent> {
+    pub fn get(
+        &self,
+        scope: PathPointerScope,
+    ) -> Option<&PathPointerComponent> {
         self.components
             .iter()
             .find(|c| c.scope.as_ref().map_or(false, |v| v == &scope))
@@ -123,36 +138,51 @@ impl PathPointer {
         self.get_primary(Some(ancestor))
     }
 
-    fn get_primary(&self, ancestor: Option<PointerAncestor>) -> DiffResultType {
+    fn get_primary(
+        &self,
+        ancestor: Option<PointerAncestor>,
+    ) -> DiffResultType {
         let mut found = true;
         let mut result = DiffResultType::None;
 
         if let Some(ancestor) = ancestor {
             match ancestor {
                 PointerAncestor::Scope(ref target_scope) => {
-                    found = false;
-                    for PathPointerComponent { kind, scope, .. } in self.components.iter() {
-                        if kind.is_added() | kind.is_removed() {
-                            return *kind;
-                        } else if kind.is_updated() || (kind.is_same() && result.is_none()) {
-                            result = *kind;
-                        }
+                    let latest = self
+                        .components
+                        .iter()
+                        .rfind(|c| c.scope.as_ref() == Some(target_scope));
+                    found = match latest {
+                        Some(latest) => {
+                            let mut is_latest_found = false;
+                            let iterator =
+                                self.components.iter().take_while(|c| {
+                                    if is_latest_found {
+                                        return false;
+                                    }
+                                    is_latest_found |= *c == latest;
+                                    true
+                                });
 
-                        if let Some(scope) = scope {
-                            if scope == target_scope {
-                                found = true;
-                                break;
+                            for PathPointerComponent { kind, .. } in iterator {
+                                if kind.is_added() | kind.is_removed() {
+                                    return *kind;
+                                } else if kind.is_same() || kind.is_updated() {
+                                    result = *kind;
+                                }
                             }
+                            true
                         }
-                    }
+                        None => false,
+                    };
                 }
-
                 PointerAncestor::Relative(value) => {
-                    let slice = &self.components[..(self.components.len() - value)];
+                    let slice =
+                        &self.components[..(self.components.len() - value)];
                     for PathPointerComponent { kind, .. } in slice {
                         if kind.is_added() | kind.is_removed() {
                             return *kind;
-                        } else if (kind.is_same() && result.is_none()) || kind.is_updated() {
+                        } else if kind.is_same() || kind.is_updated() {
                             result = *kind;
                         }
                     }
@@ -162,7 +192,7 @@ impl PathPointer {
             for PathPointerComponent { kind, .. } in self.components.iter() {
                 if kind.is_added() | kind.is_removed() {
                     return *kind;
-                } else if (kind.is_same() && result.is_none()) || kind.is_updated() {
+                } else if kind.is_same() || kind.is_updated() {
                     result = *kind;
                 }
             }

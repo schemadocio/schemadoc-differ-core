@@ -44,7 +44,9 @@ impl HttpSchemaDiff {
 
         if let Some(paths) = self.paths.get() {
             for (_real_path, may_be_path_diff_result) in paths.iter() {
-                if let Some(MayBeRefDiff::Value(path_diff_result)) = may_be_path_diff_result.get() {
+                if let Some(MayBeRefDiff::Value(path_diff_result)) =
+                    may_be_path_diff_result.get()
+                {
                     if let Some(path) = path_diff_result.get() {
                         for operation in [
                             &path.get,

@@ -5,8 +5,8 @@ use differ_core_derive::{Diff, DiffOwnChanges, Empty};
 use serde_json::Value;
 
 use crate::core::{
-    Diff, DiffContext, DiffResult, EitherDiff, Empty, MapDiff, MayBeRefCoreDiff, Referencable,
-    VecDiff,
+    Diff, DiffContext, DiffResult, EitherDiff, Empty, MapDiff,
+    MayBeRefCoreDiff, Referencable, VecDiff,
 };
 
 use crate::schema::HttpSchemaRef;
@@ -23,7 +23,9 @@ fn check_custom_fields(fields: &DiffResult<MapDiff<Value>>) -> bool {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct HttpSchemaDiff {
     pub version: String,
@@ -34,7 +36,8 @@ pub struct HttpSchemaDiff {
 
     pub info: DiffResult<InfoDiff>,
     pub servers: DiffResult<VecDiff<ServerDiff>>,
-    pub paths: DiffResult<MapDiff<MayBeRefDiff<PathDiff>, PathsMapPathResolver>>,
+    pub paths:
+        DiffResult<MapDiff<MayBeRefDiff<PathDiff>, PathsMapPathResolver>>,
     pub components: DiffResult<ComponentsDiff>,
     pub tags: DiffResult<VecDiff<TagDiff>>,
     pub external_docs: DiffResult<ExternalDocDiff>,
@@ -44,12 +47,16 @@ impl HttpSchemaDiff {
     pub fn get_diff_version(&self) -> String {
         format!(
             "{}-{}-{}",
-            self.schema_version, self.schema_source, self.schema_source_version
+            self.schema_version,
+            self.schema_source,
+            self.schema_source_version
         )
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct InfoDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -66,7 +73,9 @@ pub struct InfoDiff {
     pub version: DiffResult<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 pub struct ContactDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
     pub name: DiffResult<String>,
@@ -76,7 +85,9 @@ pub struct ContactDiff {
     pub email: DiffResult<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 pub struct LicenseDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
     pub name: DiffResult<String>,
@@ -84,7 +95,9 @@ pub struct LicenseDiff {
     pub url: DiffResult<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 pub struct ServerDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
     pub url: DiffResult<String>,
@@ -94,7 +107,9 @@ pub struct ServerDiff {
     pub variables: DiffResult<MapDiff<ServerVariableDiff>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 pub struct ServerVariableDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
     pub r#enum: DiffResult<VecDiff<String>>,
@@ -104,7 +119,9 @@ pub struct ServerVariableDiff {
     pub description: DiffResult<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct ComponentsDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -120,12 +137,15 @@ pub struct ComponentsDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
     pub headers: DiffResult<MapDiff<MayBeRefDiff<HeaderDiff>>>,
     #[serde(skip_serializing_if = "DiffResult::is_none")]
-    pub security_schemes: DiffResult<MapDiff<MayBeRefDiff<SecuritySchemeDiff>>>,
+    pub security_schemes:
+        DiffResult<MapDiff<MayBeRefDiff<SecuritySchemeDiff>>>,
     #[serde(skip_serializing_if = "DiffResult::is_none")]
     pub links: DiffResult<MapDiff<MayBeRefDiff<LinkDiff>>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct ExternalDocDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -134,7 +154,9 @@ pub struct ExternalDocDiff {
     pub description: DiffResult<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct ParameterDiff {
     pub name: String,
@@ -168,7 +190,9 @@ pub struct ParameterDiff {
 
 impl Referencable for ParameterDiff {}
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct RequestBodyDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -181,7 +205,9 @@ pub struct RequestBodyDiff {
 
 impl Referencable for RequestBodyDiff {}
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaTypeDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -193,7 +219,9 @@ pub struct MediaTypeDiff {
     pub encoding: DiffResult<MapDiff<EncodingDiff>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct EncodingDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -210,7 +238,9 @@ pub struct EncodingDiff {
 
 impl Referencable for EncodingDiff {}
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct LinkDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -229,7 +259,9 @@ pub struct LinkDiff {
 
 impl Referencable for LinkDiff {}
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 pub struct ResponseDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
     pub description: DiffResult<String>,
@@ -244,7 +276,9 @@ pub struct ResponseDiff {
 
 impl Referencable for ResponseDiff {}
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct ExampleDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -259,7 +293,9 @@ pub struct ExampleDiff {
 
 impl Referencable for ExampleDiff {}
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct DiscriminatorDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -268,7 +304,9 @@ pub struct DiscriminatorDiff {
     pub mapping: DiffResult<MapDiff<String>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct XmlDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -283,7 +321,9 @@ pub struct XmlDiff {
     pub wrapped: DiffResult<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct SecuritySchemeDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -306,7 +346,9 @@ pub struct SecuritySchemeDiff {
 
 impl Referencable for SecuritySchemeDiff {}
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct OAuthFlowsDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -319,7 +361,9 @@ pub struct OAuthFlowsDiff {
     pub authorization_code: DiffResult<OAuthFlowDiff>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct OAuthFlowDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -332,7 +376,9 @@ pub struct OAuthFlowDiff {
     pub scopes: DiffResult<MapDiff<String>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct TagDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -343,7 +389,9 @@ pub struct TagDiff {
     pub external_doc: DiffResult<ExternalDocDiff>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct SchemaDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -382,7 +430,8 @@ pub struct SchemaDiff {
     pub r#enum: DiffResult<VecDiff<Value>>,
 
     #[serde(skip_serializing_if = "DiffResult::is_none")]
-    pub r#type: DiffResult<EitherDiff<String, VecDiff<String, TypeVecDiffSorter>>>,
+    pub r#type:
+        DiffResult<EitherDiff<String, VecDiff<String, TypeVecDiffSorter>>>,
     #[serde(skip_serializing_if = "DiffResult::is_none")]
     pub all_of: DiffResult<VecDiff<MayBeRefDiff<SchemaDiff>>>,
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -396,7 +445,8 @@ pub struct SchemaDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
     pub properties: DiffResult<MapDiff<MayBeRefDiff<SchemaDiff>>>,
     #[serde(skip_serializing_if = "DiffResult::is_none")]
-    pub additional_properties: DiffResult<EitherDiff<bool, MayBeRefDiff<SchemaDiff>>>,
+    pub additional_properties:
+        DiffResult<EitherDiff<bool, MayBeRefDiff<SchemaDiff>>>,
     #[serde(skip_serializing_if = "DiffResult::is_none")]
     pub description: DiffResult<String>,
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -425,7 +475,9 @@ pub struct SchemaDiff {
 
 impl Referencable for SchemaDiff {}
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct HeaderDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -457,7 +509,9 @@ pub struct HeaderDiff {
 
 impl Referencable for HeaderDiff {}
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct OperationDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
@@ -489,7 +543,9 @@ pub struct OperationDiff {
     pub deprecated: DiffResult<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Empty, Diff, DiffOwnChanges,
+)]
 pub struct PathDiff {
     #[serde(skip_serializing_if = "DiffResult::is_none")]
     pub get: DiffResult<OperationDiff>,
@@ -532,7 +588,9 @@ pub(crate) fn deref_schema_diff<'a>(
                     if let Some(components) = diff.components.get() {
                         if let Some(schemas) = components.schemas.get() {
                             if let Some(may_be_schema) = schemas.get(&key) {
-                                if let Some(MayBeRefDiff::Value(schema)) = may_be_schema.get() {
+                                if let Some(MayBeRefDiff::Value(schema)) =
+                                    may_be_schema.get()
+                                {
                                     return Some(schema);
                                 }
                             }
@@ -553,12 +611,16 @@ pub(crate) fn deref_parameter_diff<'a>(
         MayBeRefDiff::Value(value) => return Some(value),
         MayBeRefDiff::Ref(value) => {
             if value.reference.starts_with("#/components/parameters/") {
-                let key = value.reference.replace("#/components/parameters/", "");
+                let key =
+                    value.reference.replace("#/components/parameters/", "");
                 if diff.components.exists() {
                     if let Some(components) = diff.components.get() {
                         if let Some(parameters) = components.parameters.get() {
-                            if let Some(may_be_parameter) = parameters.get(&key) {
-                                if let Some(MayBeRefDiff::Value(parameter)) = may_be_parameter.get()
+                            if let Some(may_be_parameter) =
+                                parameters.get(&key)
+                            {
+                                if let Some(MayBeRefDiff::Value(parameter)) =
+                                    may_be_parameter.get()
                                 {
                                     return Some(parameter);
                                 }
@@ -580,12 +642,19 @@ pub(crate) fn deref_request_body_diff<'a>(
         MayBeRefDiff::Value(value) => return Some(value),
         MayBeRefDiff::Ref(value) => {
             if value.reference.starts_with("#/components/requestBodies/") {
-                let key = value.reference.replace("#/components/requestBodies/", "");
+                let key =
+                    value.reference.replace("#/components/requestBodies/", "");
                 if diff.components.exists() {
                     if let Some(components) = diff.components.get() {
-                        if let Some(request_bodies) = components.request_bodies.get() {
-                            if let Some(request_body) = request_bodies.get(&key) {
-                                if let Some(MayBeRefDiff::Value(request_body)) = request_body.get()
+                        if let Some(request_bodies) =
+                            components.request_bodies.get()
+                        {
+                            if let Some(request_body) =
+                                request_bodies.get(&key)
+                            {
+                                if let Some(MayBeRefDiff::Value(
+                                    request_body,
+                                )) = request_body.get()
                                 {
                                     return Some(request_body);
                                 }
@@ -607,12 +676,15 @@ pub(crate) fn deref_response_diff<'a>(
         MayBeRefDiff::Value(value) => return Some(value),
         MayBeRefDiff::Ref(value) => {
             if value.reference.starts_with("#/components/responses/") {
-                let key = value.reference.replace("#/components/responses/", "");
+                let key =
+                    value.reference.replace("#/components/responses/", "");
                 if diff.components.exists() {
                     if let Some(components) = diff.components.get() {
                         if let Some(responses) = components.responses.get() {
                             if let Some(response) = responses.get(&key) {
-                                if let Some(MayBeRefDiff::Value(response)) = response.get() {
+                                if let Some(MayBeRefDiff::Value(response)) =
+                                    response.get()
+                                {
                                     return Some(response);
                                 }
                             }

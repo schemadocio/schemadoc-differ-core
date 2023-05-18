@@ -7,7 +7,9 @@ use std::collections::HashMap;
 pub struct TypeVecDiffSorter;
 
 impl VecDiffTransformer<Vec<DiffResult<String>>> for TypeVecDiffSorter {
-    fn transform(mut vector: Vec<DiffResult<String>>) -> Vec<DiffResult<String>> {
+    fn transform(
+        mut vector: Vec<DiffResult<String>>,
+    ) -> Vec<DiffResult<String>> {
         let index = vector.iter().position(|v| match v.get() {
             Some(value) => value == "null",
             None => false,
@@ -27,7 +29,10 @@ impl VecDiffTransformer<Vec<DiffResult<String>>> for TypeVecDiffSorter {
 ///     `v1/datasets/{name}/tags` considers the same endpoint as `v1/datasets/{uuid}/tags`
 /// Right now we do not care about parameter type when merging
 #[derive(Debug, Clone)]
-pub struct PathsMapPathResolver(HashMap<String, String>, HashMap<String, String>);
+pub struct PathsMapPathResolver(
+    HashMap<String, String>,
+    HashMap<String, String>,
+);
 
 fn get_key(key: &str) -> String {
     let re = Regex::new(r"\{.+?}").unwrap();
@@ -39,9 +44,11 @@ impl PathResolver for PathsMapPathResolver {
     where
         T: Iterator<Item = &'a String>,
     {
-        let keys1: HashMap<_, _> = k1.map(|key| (get_key(key), key.clone())).collect();
+        let keys1: HashMap<_, _> =
+            k1.map(|key| (get_key(key), key.clone())).collect();
 
-        let keys2: HashMap<_, _> = k2.map(|key| (get_key(key), key.clone())).collect();
+        let keys2: HashMap<_, _> =
+            k2.map(|key| (get_key(key), key.clone())).collect();
 
         Self(keys1, keys2)
     }

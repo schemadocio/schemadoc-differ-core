@@ -77,3 +77,43 @@ impl<'s> ValidationIssuer<'s> for AddedRequiredRequestBodyCheck {
         Some(issues)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::checker::added_required_request_body_check::AddedRequiredRequestBodyCheck;
+    use crate::checker::ValidationIssuer;
+    use crate::get_schema_diff;
+    use crate::schema::HttpSchema;
+    use crate::schemas::openapi303::schema::OpenApi303;
+
+    #[test]
+    fn test_added_required_request_body_check() {
+        let src_schema: HttpSchema = serde_json::from_str::<OpenApi303>(include_str!(
+            "../../data/checks/added-required-request-body/schema-with-required-body.json"
+        ))
+        .unwrap()
+        .into();
+
+        let tgt_schema: HttpSchema = serde_json::from_str::<OpenApi303>(include_str!(
+            "../../data/checks/added-required-request-body/schema-with-required-body-altered.json"
+        ))
+        .unwrap()
+        .into();
+
+        let diff = get_schema_diff(src_schema, tgt_schema);
+
+        let checker = AddedRequiredRequestBodyCheck::default();
+        crate::visitor::dispatch_visitor(diff.get().unwrap(), &checker);
+        let issues = checker.issues().unwrap();
+
+        assert_eq!(issues.len(), 2);
+        assert_eq!(
+            issues.get(0).unwrap().path.get_path(),
+            "paths//test/post/requestBody",
+        );
+        assert_eq!(
+            issues.get(1).unwrap().path.get_path(),
+            "paths//test/patch/requestBody",
+        );
+    }
+}

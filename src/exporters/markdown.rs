@@ -28,7 +28,8 @@ impl<'s, 'v> DiffVisitor<'s> for PathToMarkdownVisitor<'s, 'v> {
     ) -> bool {
         if let Some(endpoints) = self.endpoints {
             if !endpoints.is_empty() {
-                let is_matches = endpoints.iter().any(|filter| pointer.matches(filter));
+                let is_matches =
+                    endpoints.iter().any(|filter| pointer.matches(filter));
                 if !is_matches {
                     return false;
                 }
@@ -44,28 +45,34 @@ impl<'s, 'v> DiffVisitor<'s> for PathToMarkdownVisitor<'s, 'v> {
                 return false;
             }
 
-            has_breaking = validations
-                .iter()
-                .any(|validation| validation.path.startswith(pointer) && validation.breaking);
+            has_breaking = validations.iter().any(|validation| {
+                validation.path.startswith(pointer) && validation.breaking
+            });
         }
 
         match operation_diff_result {
             DiffResult::None => {}
             DiffResult::Same(_) => {}
             DiffResult::Added(value) => {
-                self.added
-                    .borrow_mut()
-                    .push((pointer.clone(), value, has_breaking));
+                self.added.borrow_mut().push((
+                    pointer.clone(),
+                    value,
+                    has_breaking,
+                ));
             }
             DiffResult::Updated(value, _) => {
-                self.updated
-                    .borrow_mut()
-                    .push((pointer.clone(), value, has_breaking));
+                self.updated.borrow_mut().push((
+                    pointer.clone(),
+                    value,
+                    has_breaking,
+                ));
             }
             DiffResult::Removed(value) => {
-                self.removed
-                    .borrow_mut()
-                    .push((pointer.clone(), value, has_breaking));
+                self.removed.borrow_mut().push((
+                    pointer.clone(),
+                    value,
+                    has_breaking,
+                ));
             }
         };
 
@@ -100,13 +107,15 @@ impl Exporter<Markdown> for HttpSchemaDiff {
         let updated = visitor.updated.borrow();
         let removed = visitor.removed.borrow();
 
-        let is_unchanged = added.is_empty() && updated.is_empty() && removed.is_empty();
+        let is_unchanged =
+            added.is_empty() && updated.is_empty() && removed.is_empty();
         if !is_unchanged {
             markdown.push_str("*API Schema diff*\n");
             markdown.push_str(&format!("Project: *{project}*\n"));
             markdown.push_str(&format!("Branch: *{branch}*\n"));
 
-            let now = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+            let now = chrono::Utc::now()
+                .to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
             markdown.push_str(&format!("Generated at: *{now} UTC*\n"));
         }
 
@@ -135,7 +144,11 @@ impl Exporter<Markdown> for HttpSchemaDiff {
     }
 }
 
-fn format_path(path: &PathPointer, breaking: bool, version_url: &str) -> String {
+fn format_path(
+    path: &PathPointer,
+    breaking: bool,
+    version_url: &str,
+) -> String {
     let breaking = if breaking { "!" } else { "-" };
 
     let url = format!("{}#{}", version_url, path.get_path());
