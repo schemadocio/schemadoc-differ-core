@@ -10,7 +10,6 @@ pub mod schema;
 pub mod schema_diff;
 pub mod schema_diff_utils;
 pub mod schemas;
-pub mod stats;
 pub mod visitor;
 pub mod visitors;
 

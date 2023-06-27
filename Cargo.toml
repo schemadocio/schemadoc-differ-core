@@ -1,6 +1,6 @@
 [package]
 name = "schemadoc-differ-core"
-version = "0.1.17"
+version = "0.1.18"
 edition = "2021"
 authors = ["Dzmitry Bukhta <bukhta.d@gmail.com>"]
 readme = "README.md"
