@@ -1,5 +1,7 @@
 pub mod markdown;
 
+use indexmap::IndexMap;
+
 use crate::checker::ValidationIssue;
 use crate::path_pointer::{PathPointer, PathPointerScope};
 
@@ -34,8 +36,7 @@ impl Markdown {
 pub trait Exporter<R> {
     fn export(
         &self,
-        branch: &str,
-        project: &str,
+        info: IndexMap<&str, &str>,
         version_url: &str,
         invalid_only: bool,
         path_filters: Option<&[String]>,

@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use indexmap::IndexMap;
 
 use crate::core::DiffResult;
 use crate::exporters::{display_method, display_uri, Exporter, Markdown};
@@ -83,8 +84,7 @@ impl<'s, 'v> DiffVisitor<'s> for PathToMarkdownVisitor<'s, 'v> {
 impl Exporter<Markdown> for HttpSchemaDiff {
     fn export(
         &self,
-        branch: &str,
-        project: &str,
+        info: IndexMap<&str, &str>,
         version_url: &str,
         invalid_only: bool,
         endpoints: Option<&[String]>,
@@ -111,8 +111,12 @@ impl Exporter<Markdown> for HttpSchemaDiff {
             added.is_empty() && updated.is_empty() && removed.is_empty();
         if !is_unchanged {
             markdown.push_str("*API Schema diff*\n");
-            markdown.push_str(&format!("Project: *{project}*\n"));
-            markdown.push_str(&format!("Branch: *{branch}*\n"));
+
+            info.iter()
+                .for_each(
+                    |(field, value)|
+                        markdown.push_str(&format!("{field}: *{value}*\n"))
+                );
 
             let now = chrono::Utc::now()
                 .to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
