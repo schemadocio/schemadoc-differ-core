@@ -1,5 +1,5 @@
 [package]
-name = "differ-core-derive"
+name = "schemadoc-diff-derive"
 version = "0.1.0"
 edition = "2018"
 

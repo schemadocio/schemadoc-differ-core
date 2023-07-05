@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-use differ_core_derive::{Diff, DiffOwnChanges, Empty};
+use schemadoc_diff_derive::{Diff, DiffOwnChanges, Empty};
 use serde_json::Value;
 
 use crate::core::{
