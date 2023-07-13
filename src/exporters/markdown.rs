@@ -1,5 +1,5 @@
-use std::cell::RefCell;
 use indexmap::IndexMap;
+use std::cell::RefCell;
 
 use crate::core::DiffResult;
 use crate::exporters::{display_method, display_uri, Exporter, Markdown};
@@ -112,11 +112,9 @@ impl Exporter<Markdown> for HttpSchemaDiff {
         if !is_unchanged {
             markdown.push_str("*API Schema diff*\n");
 
-            info.iter()
-                .for_each(
-                    |(field, value)|
-                        markdown.push_str(&format!("{field}: *{value}*\n"))
-                );
+            info.iter().for_each(|(field, value)| {
+                markdown.push_str(&format!("{field}: *{value}*\n"))
+            });
 
             let now = chrono::Utc::now()
                 .to_rfc3339_opts(chrono::SecondsFormat::Secs, true);

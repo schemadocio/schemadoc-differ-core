@@ -326,7 +326,7 @@ pub fn dispatch_operation<'s, T: DiffVisitor<'s>>(
         if visitor.visit_parameters(&p, &operation.parameters) {
             if let Some(parameters) = operation.parameters.get() {
                 for (idx, may_be_parameter_diff_result) in
-                parameters.iter().enumerate()
+                    parameters.iter().enumerate()
                 {
                     let pointer = p.add(
                         may_be_parameter_diff_result,
@@ -464,7 +464,7 @@ pub fn dispatch_schema<'s, T: DiffVisitor<'s>>(
                         Some(PathPointerScope::SchemaNot),
                     );
                     for (idx, may_be_schema_diff_result) in
-                    may_be_schema_vec.iter().enumerate()
+                        may_be_schema_vec.iter().enumerate()
                     {
                         let pointer = pointer.add(
                             may_be_schema_diff_result,
@@ -489,7 +489,7 @@ pub fn dispatch_schema<'s, T: DiffVisitor<'s>>(
                         Some(PathPointerScope::SchemaOneOf),
                     );
                     for (idx, may_be_schema_diff_result) in
-                    may_be_schema_vec.iter().enumerate()
+                        may_be_schema_vec.iter().enumerate()
                     {
                         let pointer = pointer.add(
                             may_be_schema_diff_result,
@@ -514,7 +514,7 @@ pub fn dispatch_schema<'s, T: DiffVisitor<'s>>(
                         Some(PathPointerScope::SchemaAnyOf),
                     );
                     for (idx, may_be_schema_diff_result) in
-                    may_be_schema_vec.iter().enumerate()
+                        may_be_schema_vec.iter().enumerate()
                     {
                         let pointer = pointer.add(
                             may_be_schema_diff_result,
@@ -539,7 +539,7 @@ pub fn dispatch_schema<'s, T: DiffVisitor<'s>>(
                         Some(PathPointerScope::SchemaAllOf),
                     );
                     for (idx, may_be_schema_diff_result) in
-                    may_be_schema_vec.iter().enumerate()
+                        may_be_schema_vec.iter().enumerate()
                     {
                         let pointer = pointer.add(
                             may_be_schema_diff_result,
@@ -610,8 +610,8 @@ impl<'a, 's> MergedVisitor<'a, 's> {
 
     #[inline(always)]
     fn visit<C>(&self, pointer: &PathPointer, visit: C) -> bool
-        where
-            C: Fn(&&'a dyn DiffVisitor<'s>) -> bool,
+    where
+        C: Fn(&&'a dyn DiffVisitor<'s>) -> bool,
     {
         let mut config = self.config.borrow_mut();
         let mut result = false;
@@ -746,23 +746,21 @@ mod test {
     use crate::schemas::openapi303::schema::OpenApi303;
     use crate::visitor::{dispatch_visitor, DiffVisitor};
 
-
     #[test]
     fn test_pointer_level_values() {
-        let src_schema: HttpSchema = serde_json::from_str::<OpenApi303>(include_str!(
-            "../data/visitor-pointer-test.json"
-        ))
-            .unwrap()
-            .into();
+        let src_schema: HttpSchema = serde_json::from_str::<OpenApi303>(
+            include_str!("../data/visitor-pointer-test.json"),
+        )
+        .unwrap()
+        .into();
 
-        let tgt_schema: HttpSchema = serde_json::from_str::<OpenApi303>(include_str!(
-            "../data/visitor-pointer-test.json"
-        ))
-            .unwrap()
-            .into();
+        let tgt_schema: HttpSchema = serde_json::from_str::<OpenApi303>(
+            include_str!("../data/visitor-pointer-test.json"),
+        )
+        .unwrap()
+        .into();
 
         let diff = get_schema_diff(src_schema, tgt_schema);
-
 
         struct PointerLevelVisitor<'s>(&'s HttpSchemaDiff);
 

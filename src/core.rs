@@ -367,10 +367,7 @@ where
     T: Diff<T, O, C> + Clone + Debug + 'static,
     O: Referencable + Clone + Debug + 'static,
     R: ReferenceDescriptor + Clone + Debug + 'static,
-    C: DiffContext
-        + ComponentContainer<T>
-        + DiffCache<O>
-        + ToOwned<Owned = C>,
+    C: DiffContext + ComponentContainer<T> + DiffCache<O> + ToOwned<Owned = C>,
 {
     fn diff(
         &self,

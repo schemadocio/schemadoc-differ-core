@@ -4,7 +4,9 @@ use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 
 use quote::quote;
-use syn::{Data, Field, Fields, GenericArgument, Path, PathArguments, Type, TypePath};
+use syn::{
+    Data, Field, Fields, GenericArgument, Path, PathArguments, Type, TypePath,
+};
 
 #[derive(Debug)]
 enum FieldType {
@@ -49,16 +51,17 @@ enum CoFieldType {
     PrimitiveDiffResult,
 }
 
-
 fn is_primitive_type(path: &Path) -> bool {
     match path.get_ident() {
         None => false,
         Some(ident) => {
-            matches!(ident.to_string().as_ref(), "String" | "usize" | "bool" | "f32" | "Value")
+            matches!(
+                ident.to_string().as_ref(),
+                "String" | "usize" | "bool" | "f32" | "Value"
+            )
         }
     }
 }
-
 
 fn co_get_field_type(field: &Field) -> CoFieldType {
     match &field.ty {
@@ -71,28 +74,35 @@ fn co_get_field_type(field: &Field) -> CoFieldType {
                         let ident = &path.segments[0].ident;
                         if ident == "DiffResult" {
                             match inner_type(&ty.path) {
-                                Some(Type::Path(TypePath { path, .. })) => {
+                                Some(Type::Path(TypePath {
+                                    path, ..
+                                })) => {
                                     if is_primitive_type(path) {
                                         CoFieldType::PrimitiveDiffResult
                                     } else {
                                         CoFieldType::Other
                                     }
                                 }
-                                _ => unreachable!("DiffResult must have generic type."),
+                                _ => unreachable!(
+                                    "DiffResult must have generic type."
+                                ),
                             }
                         } else {
                             CoFieldType::Other
                         }
                     }
                     None => unreachable!("Box must have generic type."),
-                    _ => CoFieldType::Other
+                    _ => CoFieldType::Other,
                 }
             } else if ident == "DiffResult" {
                 match inner_type(&ty.path) {
                     Some(Type::Path(TypePath { path, .. })) => {
                         if is_primitive_type(path) {
                             CoFieldType::PrimitiveDiffResult
-                        } else if matches!(path.segments[0].ident.to_string().as_ref(), "VecDiff" | "MapDiff") {
+                        } else if matches!(
+                            path.segments[0].ident.to_string().as_ref(),
+                            "VecDiff" | "MapDiff"
+                        ) {
                             CoFieldType::ContainerDiffResult
                         } else {
                             CoFieldType::Other
@@ -104,17 +114,14 @@ fn co_get_field_type(field: &Field) -> CoFieldType {
                 CoFieldType::Other
             }
         }
-        _ => CoFieldType::Other
+        _ => CoFieldType::Other,
     }
 }
 
 #[proc_macro_derive(DiffOwnChanges)]
 pub fn diff_own_changes_proc_macro(input: TokenStream) -> TokenStream {
-    let syn::DeriveInput {
-        ident,
-        data,
-        ..
-    } = syn::parse_macro_input!(input as syn::DeriveInput);
+    let syn::DeriveInput { ident, data, .. } =
+        syn::parse_macro_input!(input as syn::DeriveInput);
 
     let data = match data {
         Data::Struct(data) => data,
@@ -123,7 +130,7 @@ pub fn diff_own_changes_proc_macro(input: TokenStream) -> TokenStream {
 
     let fields = match data.fields {
         Fields::Named(fields) => fields.named,
-        _ => panic!("Only structs with names fields are supported")
+        _ => panic!("Only structs with names fields are supported"),
     };
 
     let diff_result_fields: Vec<_> = fields
@@ -184,7 +191,7 @@ fn get_field_type(field: &Field) -> FieldType {
                         }
                     }
                     None => unreachable!("Box must have generic type."),
-                    _ => FieldType::Other
+                    _ => FieldType::Other,
                 }
             } else if ident == "DiffResult" {
                 FieldType::DiffResult
@@ -192,18 +199,14 @@ fn get_field_type(field: &Field) -> FieldType {
                 FieldType::Other
             }
         }
-        _ => FieldType::Other
+        _ => FieldType::Other,
     }
 }
 
-
 #[proc_macro_derive(Empty)]
 pub fn is_empty_proc_macro(input: TokenStream) -> TokenStream {
-    let syn::DeriveInput {
-        ident,
-        data,
-        ..
-    } = syn::parse_macro_input!(input as syn::DeriveInput);
+    let syn::DeriveInput { ident, data, .. } =
+        syn::parse_macro_input!(input as syn::DeriveInput);
 
     let data = match data {
         Data::Struct(data) => data,
@@ -212,17 +215,15 @@ pub fn is_empty_proc_macro(input: TokenStream) -> TokenStream {
 
     let fields = match data.fields {
         Fields::Named(fields) => fields.named,
-        _ => panic!("Only structs with names fields are supported")
+        _ => panic!("Only structs with names fields are supported"),
     };
     let diff_result_fields: Vec<_> = fields
         .iter()
         .filter(|field| !get_field_type(field).is_other())
         .collect();
 
-    let field_idents = diff_result_fields
-        .iter()
-        .enumerate()
-        .map(|(i, field)| {
+    let field_idents =
+        diff_result_fields.iter().enumerate().map(|(i, field)| {
             let field_ident = field.ident.as_ref().unwrap();
 
             let delim = if i < diff_result_fields.len() - 1 {
@@ -264,10 +265,9 @@ fn get_field_diff_type(field: &Field) -> FieldTypeDiff {
                 FieldTypeDiff::Other
             }
         }
-        _ => FieldTypeDiff::Other
+        _ => FieldTypeDiff::Other,
     }
 }
-
 
 #[proc_macro_derive(Diff)]
 pub fn diff_proc_macro(input: TokenStream) -> TokenStream {
@@ -284,7 +284,7 @@ pub fn diff_proc_macro(input: TokenStream) -> TokenStream {
 
     let fields = match data.fields {
         Fields::Named(fields) => fields.named,
-        _ => panic!("Only structs with names fields are supported")
+        _ => panic!("Only structs with names fields are supported"),
     };
 
     let fields: Vec<_> = fields
@@ -320,10 +320,8 @@ pub fn diff_proc_macro(input: TokenStream) -> TokenStream {
         });
 
     let diff_ident_name = diff_ident.to_string();
-    let ident = Ident::new(
-        &diff_ident_name.replace("Diff", ""),
-        Span::call_site(),
-    );
+    let ident =
+        Ident::new(&diff_ident_name.replace("Diff", ""), Span::call_site());
 
     let expanded = quote! {
         impl Diff<crate::schema::#ident, #diff_ident, crate::context::HttpSchemaDiffContext> for crate::schema::#ident {
@@ -355,7 +353,6 @@ pub fn diff_proc_macro(input: TokenStream) -> TokenStream {
 
     TokenStream::from(expanded)
 }
-
 
 #[cfg(test)]
 mod tests {}

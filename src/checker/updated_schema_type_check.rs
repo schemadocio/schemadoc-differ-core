@@ -132,15 +132,16 @@ mod tests {
 
     #[test]
     fn test_updated_schema_type_check() {
-        let src_schema: HttpSchema = serde_json::from_str::<OpenApi303>(include_str!(
-            "../../data/checks/updated-schema-type/schema.json"
-        ))
-            .unwrap()
-            .into();
+        let src_schema: HttpSchema = serde_json::from_str::<OpenApi303>(
+            include_str!("../../data/checks/updated-schema-type/schema.json"),
+        )
+        .unwrap()
+        .into();
 
-        let tgt_schema: HttpSchema = serde_json::from_str::<OpenApi303>(include_str!(
-            "../../data/checks/updated-schema-type/schema-altered.json"
-        ))
+        let tgt_schema: HttpSchema =
+            serde_json::from_str::<OpenApi303>(include_str!(
+                "../../data/checks/updated-schema-type/schema-altered.json"
+            ))
             .unwrap()
             .into();
 

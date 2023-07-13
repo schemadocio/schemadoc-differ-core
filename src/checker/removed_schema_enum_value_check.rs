@@ -91,9 +91,11 @@ impl<'s> DiffVisitor<'s> for RemovedSchemaEnumValueCheck {
                 Some(values) => values.iter().any(|v| v.is_removed()),
             };
             if has_removed {
-                self.pointers
-                    .borrow_mut()
-                    .push(pointer.add_component(&schema.r#enum, Some("enum"), None))
+                self.pointers.borrow_mut().push(pointer.add_component(
+                    &schema.r#enum,
+                    Some("enum"),
+                    None,
+                ))
             }
         }
 
