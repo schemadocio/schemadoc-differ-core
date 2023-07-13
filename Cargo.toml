@@ -6,6 +6,7 @@ authors = ["Dzmitry Bukhta <bukhta.d@gmail.com>"]
 readme = "README.md"
 keywords = ["openapi", "diff", "breaking", "changes"]
 license = "Apache-2.0"
+description = "OpenApi diff library and breaking changes detector"
 autotests = false
 
 [dependencies]
