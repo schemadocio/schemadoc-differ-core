@@ -30,7 +30,7 @@ pub trait ComponentContainer<T> {
     fn deref_target(&self, reference: &str) -> Option<&T>;
 }
 
-pub trait DiffContainer<O> {
+pub trait DiffCache<O> {
     fn get_diff(&self, reference: &str) -> Option<Arc<DiffResult<O>>>;
     fn set_diff(&self, reference: &str, component: Arc<DiffResult<O>>);
 }
@@ -369,7 +369,7 @@ where
     R: ReferenceDescriptor + Clone + Debug + 'static,
     C: DiffContext
         + ComponentContainer<T>
-        + DiffContainer<O>
+        + DiffCache<O>
         + ToOwned<Owned = C>,
 {
     fn diff(

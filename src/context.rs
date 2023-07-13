@@ -6,7 +6,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::core::{
-    ComponentContainer, DiffContainer, DiffContext, DiffResult, MayBeRefCore,
+    ComponentContainer, DiffCache, DiffContext, DiffResult, MayBeRefCore,
 };
 use crate::schema::{
     Components, Example, Header, HttpSchema, Link, Parameter, Path,
@@ -433,7 +433,7 @@ impl ComponentContainer<Response> for HttpSchemaDiffContext {
     }
 }
 
-impl DiffContainer<PathDiff> for HttpSchemaDiffContext {
+impl DiffCache<PathDiff> for HttpSchemaDiffContext {
     fn get_diff(&self, _reference: &str) -> Option<Arc<DiffResult<PathDiff>>> {
         None
     }
@@ -446,7 +446,7 @@ impl DiffContainer<PathDiff> for HttpSchemaDiffContext {
     }
 }
 
-impl DiffContainer<Value> for HttpSchemaDiffContext {
+impl DiffCache<Value> for HttpSchemaDiffContext {
     fn get_diff(&self, _reference: &str) -> Option<Arc<DiffResult<Value>>> {
         None
     }
@@ -454,7 +454,7 @@ impl DiffContainer<Value> for HttpSchemaDiffContext {
     fn set_diff(&self, _reference: &str, _component: Arc<DiffResult<Value>>) {}
 }
 
-impl DiffContainer<SchemaDiff> for HttpSchemaDiffContext {
+impl DiffCache<SchemaDiff> for HttpSchemaDiffContext {
     fn get_diff(
         &self,
         reference: &str,
@@ -475,7 +475,7 @@ impl DiffContainer<SchemaDiff> for HttpSchemaDiffContext {
     }
 }
 
-impl DiffContainer<ParameterDiff> for HttpSchemaDiffContext {
+impl DiffCache<ParameterDiff> for HttpSchemaDiffContext {
     fn get_diff(
         &self,
         reference: &str,
@@ -496,7 +496,7 @@ impl DiffContainer<ParameterDiff> for HttpSchemaDiffContext {
     }
 }
 
-impl DiffContainer<HeaderDiff> for HttpSchemaDiffContext {
+impl DiffCache<HeaderDiff> for HttpSchemaDiffContext {
     fn get_diff(
         &self,
         reference: &str,
@@ -517,7 +517,7 @@ impl DiffContainer<HeaderDiff> for HttpSchemaDiffContext {
     }
 }
 
-impl DiffContainer<ResponseDiff> for HttpSchemaDiffContext {
+impl DiffCache<ResponseDiff> for HttpSchemaDiffContext {
     fn get_diff(
         &self,
         reference: &str,
@@ -538,7 +538,7 @@ impl DiffContainer<ResponseDiff> for HttpSchemaDiffContext {
     }
 }
 
-impl DiffContainer<ExampleDiff> for HttpSchemaDiffContext {
+impl DiffCache<ExampleDiff> for HttpSchemaDiffContext {
     fn get_diff(
         &self,
         reference: &str,
@@ -559,7 +559,7 @@ impl DiffContainer<ExampleDiff> for HttpSchemaDiffContext {
     }
 }
 
-impl DiffContainer<RequestBodyDiff> for HttpSchemaDiffContext {
+impl DiffCache<RequestBodyDiff> for HttpSchemaDiffContext {
     fn get_diff(
         &self,
         reference: &str,
@@ -580,7 +580,7 @@ impl DiffContainer<RequestBodyDiff> for HttpSchemaDiffContext {
     }
 }
 
-impl DiffContainer<SecuritySchemeDiff> for HttpSchemaDiffContext {
+impl DiffCache<SecuritySchemeDiff> for HttpSchemaDiffContext {
     fn get_diff(
         &self,
         reference: &str,
@@ -601,7 +601,7 @@ impl DiffContainer<SecuritySchemeDiff> for HttpSchemaDiffContext {
     }
 }
 
-impl DiffContainer<LinkDiff> for HttpSchemaDiffContext {
+impl DiffCache<LinkDiff> for HttpSchemaDiffContext {
     fn get_diff(&self, reference: &str) -> Option<Arc<DiffResult<LinkDiff>>> {
         (*self.link_diff_cache)
             .borrow()

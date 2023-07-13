@@ -42,70 +42,6 @@ impl<'s> SharedChangesVisitor<'s> {
 }
 
 impl<'s> DiffVisitor<'s> for SharedChangesVisitor<'s> {
-    fn visit_operation(
-        &self,
-        p: &PathPointer,
-        _: &str,
-        _: &'s DiffResult<OperationDiff>,
-    ) -> bool {
-        p.parent().is_updated()
-    }
-
-    fn visit_request_body(
-        &self,
-        p: &PathPointer,
-        _: &'s DiffResult<RequestBodyDiff>,
-    ) -> bool {
-        p.parent().is_updated()
-    }
-
-    fn visit_responses(
-        &self,
-        p: &PathPointer,
-        _: &'s DiffResult<MapDiff<MayBeRefDiff<ResponseDiff>>>,
-    ) -> bool {
-        p.parent().is_updated()
-    }
-
-    fn visit_media_types(
-        &self,
-        p: &PathPointer,
-        _: &'s DiffResult<MapDiff<MediaTypeDiff>>,
-    ) -> bool {
-        p.parent().is_updated()
-    }
-    fn visit_media_type(
-        &self,
-        p: &PathPointer,
-        _: &'s DiffResult<MediaTypeDiff>,
-    ) -> bool {
-        p.parent().is_updated()
-    }
-
-    fn visit_parameters(
-        &self,
-        p: &PathPointer,
-        _: &'s DiffResult<VecDiff<MayBeRefDiff<ParameterDiff>>>,
-    ) -> bool {
-        p.parent().is_updated()
-    }
-
-    fn visit_parameter(
-        &self,
-        p: &PathPointer,
-        _: &'s DiffResult<ParameterDiff>,
-    ) -> bool {
-        p.parent().is_updated()
-    }
-
-    fn visit_schema(
-        &self,
-        p: &PathPointer,
-        _: &'s DiffResult<SchemaDiff>,
-    ) -> bool {
-        p.parent().is_updated()
-    }
-
     /// Actual code
 
     fn visit_schema_ref(
@@ -250,6 +186,70 @@ impl<'s> DiffVisitor<'s> for SharedChangesVisitor<'s> {
             .or_insert_with(|| vec![pointer.clone()]);
 
         false
+    }
+    fn visit_operation(
+        &self,
+        p: &PathPointer,
+        _: &str,
+        _: &'s DiffResult<OperationDiff>,
+    ) -> bool {
+        p.parent().is_updated()
+    }
+
+    fn visit_request_body(
+        &self,
+        p: &PathPointer,
+        _: &'s DiffResult<RequestBodyDiff>,
+    ) -> bool {
+        p.parent().is_updated()
+    }
+
+    fn visit_responses(
+        &self,
+        p: &PathPointer,
+        _: &'s DiffResult<MapDiff<MayBeRefDiff<ResponseDiff>>>,
+    ) -> bool {
+        p.parent().is_updated()
+    }
+
+    fn visit_media_types(
+        &self,
+        p: &PathPointer,
+        _: &'s DiffResult<MapDiff<MediaTypeDiff>>,
+    ) -> bool {
+        p.parent().is_updated()
+    }
+
+    fn visit_media_type(
+        &self,
+        p: &PathPointer,
+        _: &'s DiffResult<MediaTypeDiff>,
+    ) -> bool {
+        p.parent().is_updated()
+    }
+
+    fn visit_parameters(
+        &self,
+        p: &PathPointer,
+        _: &'s DiffResult<VecDiff<MayBeRefDiff<ParameterDiff>>>,
+    ) -> bool {
+        p.parent().is_updated()
+    }
+
+    fn visit_parameter(
+        &self,
+        p: &PathPointer,
+        _: &'s DiffResult<ParameterDiff>,
+    ) -> bool {
+        p.parent().is_updated()
+    }
+
+    fn visit_schema(
+        &self,
+        p: &PathPointer,
+        _: &'s DiffResult<SchemaDiff>,
+    ) -> bool {
+        p.parent().is_updated()
     }
 }
 

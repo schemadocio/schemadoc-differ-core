@@ -14,7 +14,7 @@ use crate::schema_diff_utils::PathsMapPathResolver;
 pub trait DiffVisitor<'s> {
     fn visit_root(&self) {}
 
-    // Always look in by default
+    // Always look into by default
 
     fn visit_paths(
         &self,
